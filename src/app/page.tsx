@@ -1,103 +1,176 @@
-import Image from "next/image";
+import Image from 'next/image';
+import Navbar from '@/components/Navbar';
+import AboutUs from '@/components/AboutUs';
+import { ChevronRight } from 'lucide-react';
+import Contact from '@/components/footer';
 
-export default function Home() {
+export default function LandingPage() {
   return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+    <main className="relative flex flex-col min-h-screen w-full items-center justify-center overflow-hidden  bg-gradient-to-br from-[#7772E7] via-[#9A68EB] to-[#D881F5F5] p-4 sm:p-6 md:p-0">
+      <Navbar />
+      {/* Decorative background shape */}
+      <div className="absolute -top-24 -right-24 h-64 w-64 rounded-full bg-white/10" />
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+      {/* Main Content Grid */}
+      <div className="z-10 grid w-full max-w-7xl mt-20 grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-16">
+        
+        {/* Left Column: Text Content & CTA */}
+        <div className="flex flex-col items-center text-center lg:items-start lg:text-left">
+          <h1 className="text-4xl font-bold text-[#2C264C] sm:text-5xl md:text-6xl">
+            Unlock Your Healthiest Skin— <br /> With Confidence
+          </h1>
+          <p className="mt-4 max-w-lg text-lg text-[#2C264C] md:text-xl">
+            LesSkyn decodes skincare for you—personalized routines, real reviews, and expert guidance, all in one place.
+          </p>
+          <button className="mt-8 flex items-center justify-center gap-3 rounded-lg bg-[#443DFF] py-3 px-6 text-base font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95">
+            TAKE YOUR SKIN QUIZ
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              className="h-5 w-5"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fillRule="evenodd"
+                d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
+
+        {/* Right Column: Illustration */}
+        <div className="flex items-center justify-center">
           <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+            src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755002562/a1eea312cc7afd3fbbf90557ebb70ade153ec231_bufwj8.png" // Make sure this image is in your /public folder
+            alt="Woman applying skincare products surrounded by flowers and leaves"
+            width={900}
+            height={900}
+            priority // Load this image first as it's critical for the LCP
+            className="h-auto mt-16 w-full max-w-sm md:max-w-md lg:max-w-full"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
+        </div>
+      </div>
+      <AboutUs />
+      <div className="flex flex-row justify-start mt-16 ml-44 w-full">
+        <div className="bg-white/95 backdrop-blur-md min-w-2xl rounded-3xl p-8 md:p-12 shadow-2xl hover:shadow-3xl transition-all duration-500">
+          <div className="text-center">
+                  {/* Content Section */}
+            <div className="space-y-6 order-2 lg:order-1">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
+                Your Dashboard
+              </h1>
+                    
+            <p className="text-lg mx-auto text-gray-600 leading-relaxed max-w-md">
+              Track your skincare progress, build healthy habits, and see your results all in one place.
+            </p>
+                    
+            <button className="group mx-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold flex items-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+              VIEW DASHBOARD
+            <div className="bg-orange-500 rounded-full p-1">
+                <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+            </div>
+          </button>
+        </div>
+        </div>
+      </div>
+      <Image
+          src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755006737/man-applying-cream-on-face-for-facial-skin-treatment-concept-illustration-vector_1_mirhoh.png"
+          alt="Decorative Background"
+          height={400}
+          width={400}
+          className={`relative z-10 -ml-32 -bottom-6`}
+      />
+      </div>
+      <div className="flex flex-row justify-end mr-44 mt-16 w-full">
+        <Image
+            src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755010558/skin-care-and-treatment-5508417-4583564_1_ccyijz.png"
+            alt="Decorative Background"
+            height={400}
+            width={400}
+            className='relative z-10 -bottom-3 -mr-32'
           />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
+        <div className="bg-white/95 backdrop-blur-md min-w-2xl rounded-3xl p-8 md:p-12 shadow-2xl hover:shadow-3xl transition-all duration-500">
+          <div className="text-center">
+            {/* Content Section */}
+            <div className="space-y-6 order-2 lg:order-1">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
+                Your Dashboard
+              </h1>
+              
+              <p className="text-lg mx-auto text-gray-600 leading-relaxed max-w-md">
+                Track your skincare progress, build healthy habits, and see your results all in one place.
+              </p>
+              
+              <button className="group mx-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold flex items-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                VIEW DASHBOARD
+                <div className="bg-orange-500 rounded-full p-1">
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div className="flex flex-row justify-start mt-16 ml-44 w-full">
+        <div className="bg-white/95 backdrop-blur-md min-w-2xl rounded-3xl p-8 md:p-12 shadow-2xl hover:shadow-3xl transition-all duration-500">
+          <div className="text-center">
+            {/* Content Section */}
+            <div className="space-y-6 order-2 lg:order-1">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
+                Your Dashboard
+              </h1>
+              <p className="text-lg mx-auto text-gray-600 leading-relaxed max-w-md">
+                Track your skincare progress, build healthy habits, and see your results all in one place.
+              </p>
+              <button className="group mx-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold flex items-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                  VIEW DASHBOARD
+                <div className="bg-orange-500 rounded-full p-1">
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                </div>
+              </button>      
+            </div>
+          </div>
+        </div>
+              <Image
+                  src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755010600/facial-skin-treatment-8395272-6715534_1_liuhsm.png"
+                  alt="Decorative Background"
+                  height={400}
+                  width={400}
+                  className={`relative z-10 -ml-32 -bottom-12`}
+              />
+          </div>
+      <div className="flex flex-row justify-end mr-44 mt-16 w-full">
+        <Image
+            src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755010617/natural-skin-care-illustration-download-in-svg-png-gif-file-formats--product-herbal-cosmetic-pack-beauty-illustrations-7974588_1_r67hfz.png"
+            alt="Decorative Background"
+            height={500}
+            width={500}
+            className='relative z-10 -bottom-14 -mr-32'
           />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+        <div className="bg-white/95 backdrop-blur-md min-w-2xl rounded-3xl p-8 md:p-12 shadow-2xl hover:shadow-3xl transition-all duration-500">
+          <div className="text-center">
+            {/* Content Section */}
+            <div className="space-y-6 order-2 lg:order-1">
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
+                Your Dashboard
+              </h1>
+              
+              <p className="text-lg mx-auto text-gray-600 leading-relaxed max-w-md">
+                Track your skincare progress, build healthy habits, and see your results all in one place.
+              </p>
+              
+              <button className="group mx-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold flex items-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                VIEW DASHBOARD
+                <div className="bg-orange-500 rounded-full p-1">
+                  <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+      <Contact />
+    </main>
   );
 }
