@@ -14,3 +14,5 @@ export const authFormSchema = (type: string) => z.object({
   email: z.string().email(),
   password: z.string().min(8),
 })
+
+export const parseStringify = (value: any) => JSON.parse(JSON.stringify(value));

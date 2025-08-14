@@ -11,9 +11,8 @@ import {
 } from "@/components/ui/form"
 import Inputform from './inputform'
 import {authFormSchema} from '@/lib/utils'
-//import { signin, signup } from '@/lib/server/users.actions'
+import { signin, signup } from '@/lib/server/users.actions'
 import { useRouter } from 'next/navigation'
-//import PlaidLink from './PlaidLink'
 import { Loader2 } from 'lucide-react'
 
 const Authform = ({type}:{type:string}) => {
@@ -30,38 +29,43 @@ const Authform = ({type}:{type:string}) => {
       },
     })
 
-//   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-//     //console.log(values);
-//     setIsLoading(true);
-//     try {
-//       if (type === 'sign-up') {
-//         const userdata={
-//           firstName: values.firstName!,
-//           lastName: values.lastName!,
-//           email: values.email,
-//           password: values.password
-//         }
-//         //console.log(userdata);
-//         const newUser= await signup(userdata);
-//         setUser(newUser);
-//       }
-//       if (type === 'sign-in') {
-//         //console.log(values);
-//         const users= await signin(
-//           {
-//             email: values.email,
-//             password: values.password
-//           }
-//         );
-//         //console.log(response);
-//         if (users) router.push('/')
-//       } 
-//     } catch (error) {
-//       console.error('Error', error);
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   }
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    //console.log(values);
+    setIsLoading(true);
+    try {
+      if (type === 'sign-up') {
+        const userdata={
+          firstName: values.firstName!,
+          lastName: values.lastName!,
+          email_id: values.email,
+          password: values.password,
+          created_at: new Date()
+        }
+        console.log(userdata);
+        const newUser= await signup(userdata);
+        setUser(newUser);
+        if (newUser) {
+          // Redirect to the home page or any other page after successful signup
+          router.push('/onboarding');
+        }
+      }
+      if (type === 'sign-in') {
+        console.log(values);
+        const users= await signin(
+          {
+            email_id: values.email,
+            password: values.password
+          }
+        );
+        console.log(users);
+        if (users) router.push('/')
+      } 
+    } catch (error) {
+      console.error('Error', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }
   return (
 <section className='max-w-md mx-auto p-6 bg-[#F3E9FF26] text-[#211D39] rounded-lg shadow-lg'>
   <header className='flex flex-col gap-5 md:gap-8 mb-8'>
@@ -77,10 +81,10 @@ const Authform = ({type}:{type:string}) => {
     
     <div>
       <h2 className='text-2xl text-gray-900 font-bold lg:text-4xl mb-2'>
-        {user ? 'Link Account' : type === 'sign-in' ? 'Log in' : 'Sign up'} to LesSkyn
+        {type === 'sign-in' ? 'Log in' : 'Sign up'} to LesSkyn
       </h2>
       <p className='text-base text-gray-700 font-normal'>
-        {user ? 'Link your account to get started' : 'Please enter your details'}
+        {'Please enter your details'}
       </p>
     </div>
   </header>
@@ -93,7 +97,7 @@ const Authform = ({type}:{type:string}) => {
     <>
       <Form {...form}>
         <form 
-          onSubmit={(e) => { e.preventDefault(); }}
+          onSubmit={(e) => { e.preventDefault();form.handleSubmit(onSubmit)(e);}}
           className="space-y-6 flex flex-col w-full"
         >
           {type === 'sign-up' && (
