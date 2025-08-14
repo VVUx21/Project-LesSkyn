@@ -11,7 +11,7 @@ import SummaryStep from "@/components/onboarding-steps/summary-step"
 //import { useUserContext } from "@/context/userstate"
 import React from "react"
 
-export default function OnboardingPage(onComplete: () => void) {
+export default function OnboardingPage() {
   const { userProfile, updateUserProfile } = useSkinCare()
   const router = useRouter()
 //   const UserContext= useUserContext();

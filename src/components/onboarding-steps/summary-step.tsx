@@ -135,9 +135,9 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
         <div className="flex items-start gap-3">
           <Check className="mt-0.5 h-5 w-5 text-emerald-600" />
           <div>
-            <p className="font-medium">You're all set!</p>
+            <p className="font-medium">You&apos;re all set!</p>
             <p className="text-sm">
-              Based on your profile, we'll create a personalized skincare routine and product recommendations just for
+              Based on your profile, we&apos;ll create a personalized skincare routine and product recommendations just for
               you.
             </p>
           </div>

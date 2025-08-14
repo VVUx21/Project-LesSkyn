@@ -6,7 +6,8 @@ import { Mail, Facebook, Instagram, Twitter, Linkedin,ArrowRightIcon } from "luc
 
 export default function Contact() {
   // Scroll to specific section
-  const handleClick = (e:any, href:any) => {
+  const handleClick = ( e: React.MouseEvent<HTMLAnchorElement>,
+  href: string) => {
     e.preventDefault();
     if (href) {
       const targetElement = document.getElementById(href);

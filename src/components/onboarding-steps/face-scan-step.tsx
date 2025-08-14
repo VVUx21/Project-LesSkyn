@@ -71,8 +71,7 @@ export default function FaceScanStep() {
       <div className="rounded-lg p-4 bg-[#F3E9FF26]">
         <p className="text-sm font-medium">This step is optional</p>
         <p className="text-xs text-[#211D39]">
-          You can skip this step if you don't want to upload a face scan. Your recommendations will be based on your
-          answers to the previous questions.
+          You can skip this step if you don&apos;t want to upload a face scan. Your recommendations will be based on your answers to the previous questions.
         </p>
       </div>
 

@@ -3,6 +3,7 @@ import Navbar from '@/components/Navbar';
 import AboutUs from '@/components/AboutUs';
 import { ChevronRight } from 'lucide-react';
 import Contact from '@/components/footer';
+import Link from 'next/link';
 
 export default function LandingPage() {
   return (
@@ -22,10 +23,11 @@ export default function LandingPage() {
           <p className="mt-4 max-w-lg text-lg text-[#2C264C] md:text-xl">
             LesSkyn decodes skincare for you—personalized routines, real reviews, and expert guidance, all in one place.
           </p>
-          <button className="mt-8 flex items-center justify-center gap-3 rounded-lg bg-[#443DFF] py-3 px-6 text-base font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95">
-            TAKE YOUR SKIN QUIZ
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
+          <Link href="/onboarding">
+            <button className="mt-8 cursor-pointer flex items-center justify-center gap-3 rounded-lg bg-[#443DFF] py-3 px-6 text-base font-bold text-white shadow-lg transition-transform hover:scale-105 active:scale-95">
+              TAKE YOUR SKIN QUIZ
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
               className="h-5 w-5"
               viewBox="0 0 20 20"
               fill="currentColor"
@@ -37,6 +39,7 @@ export default function LandingPage() {
               />
             </svg>
           </button>
+          </Link>
         </div>
 
         {/* Right Column: Illustration */}
