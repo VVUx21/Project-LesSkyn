@@ -2,6 +2,14 @@
 "use client"
 import React, { createContext, useContext, useReducer, useCallback } from 'react'
 
+export type SkinType = "Feels tight, may have flaky patches, rarely gets oily" 
+| "Shiny appearance, enlarged pores, prone to breakouts" | "Oily T-zone (forehead, nose, chin) but dry cheeks" | "Well-balanced, not too oily or dry, few imperfections"
+ | "Easily irritated, may react to products with redness"
+export type SkinConcern = "Pimples, blackheads, whiteheads, and clogged pores" | "Fine lines, wrinkles, loss of firmness and elasticity" | "Lack of radiance, rough texture, uneven skin tone"
+ | "Sun spots, post-acne marks, melasma, uneven skin tone" | "Irritation, redness, reactivity to products"
+export type RoutineType = "A simple, no-fuss routine with just the essentials 3-4 steps" | "A balanced routine with targeted treatments 5-6 steps" | 
+"A complete routine for maximum results 7+ steps"
+
 // Types
 interface RoutineStep {
   stepNumber: number;

@@ -1,8 +1,8 @@
 // app/api/generate-routine/route.ts
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchAllProductsOptimized } from '@/lib/server/products.actions'; // Adjust import path as needed
-import generateSkincareRoutine from '@/lib/server/gemini.action'; // Adjust import path as needed
-import { ProductData,GenerateRoutineRequest } from "../../../lib/types"; // Adjust import path as needed
+import { fetchAllProductsOptimized } from '@/lib/server/products.actions'; 
+import generateSkincareRoutine from '@/lib/server/gemini.action'; 
+import { ProductData,GenerateRoutineRequest } from "../../../lib/types"; 
 
 let productsCache: {
   data: ProductData[];
@@ -269,21 +269,21 @@ export async function POST(request: NextRequest) {
 }
 
 // Optional: GET method for health check
-export async function GET() {
-  return NextResponse.json(
-    {
-      success: true,
-      message: 'Skincare routine API is running',
-      timestamp: new Date().toISOString(),
-      cacheStatus: productsCache ? {
-        hasCache: true,
-        age: Date.now() - productsCache.timestamp,
-        itemCount: productsCache.data.length
-      } : { hasCache: false }
-    },
-    { status: 200 }
-  );
-}
+// export async function GET() {
+//   return NextResponse.json(
+//     {
+//       success: true,
+//       message: 'Skincare routine API is running',
+//       timestamp: new Date().toISOString(),
+//       cacheStatus: productsCache ? {
+//         hasCache: true,
+//         age: Date.now() - productsCache.timestamp,
+//         itemCount: productsCache.data.length
+//       } : { hasCache: false }
+//     },
+//     { status: 200 }
+//   );
+// }
 
 // Export configuration for API route
 export const runtime = 'nodejs'; // Use Node.js runtime for better performance
