@@ -98,15 +98,15 @@ export default function LandingPage() {
             {/* Content Section */}
             <div className="space-y-6 order-2 lg:order-1">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
-                Your Dashboard
+                Your Community
               </h1>
               
               <p className="text-lg mx-auto text-gray-600 leading-relaxed max-w-md">
-                Track your skincare progress, build healthy habits, and see your results all in one place.
+                Connect with real people, share experiences, and get honest advice. Find routines, reviews, and support from everyone on their skin journey—just like you.
               </p>
               
               <button className="group mx-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold flex items-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                VIEW DASHBOARD
+               JOIN NOW
                 <div className="bg-orange-500 rounded-full p-1">
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                 </div>
@@ -121,13 +121,13 @@ export default function LandingPage() {
             {/* Content Section */}
             <div className="space-y-6 order-2 lg:order-1">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
-                Your Dashboard
+                Your Skin
               </h1>
               <p className="text-lg mx-auto text-gray-600 leading-relaxed max-w-md">
-                Track your skincare progress, build healthy habits, and see your results all in one place.
+               Know about your skin type ,skin concerns and where your skin need to improve.
               </p>
               <button className="group mx-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold flex items-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                  VIEW DASHBOARD
+                  SKIN PORTFOLIO
                 <div className="bg-orange-500 rounded-full p-1">
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                 </div>
@@ -156,15 +156,15 @@ export default function LandingPage() {
             {/* Content Section */}
             <div className="space-y-6 order-2 lg:order-1">
               <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-800 leading-tight">
-                Your Dashboard
+                Know Your Product
               </h1>
               
               <p className="text-lg mx-auto text-gray-600 leading-relaxed max-w-md">
-                Track your skincare progress, build healthy habits, and see your results all in one place.
+                Personalized product recommendations based on your skin type and concerns. Get the best products tailored just for you.
               </p>
               
               <button className="group mx-auto bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-full font-semibold flex items-center gap-3 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-xl">
-                VIEW DASHBOARD
+                CHECK NOW
                 <div className="bg-orange-500 rounded-full p-1">
                   <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" />
                 </div>

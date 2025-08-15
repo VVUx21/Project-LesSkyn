@@ -40,11 +40,11 @@ const Navbar = () => {
                         </div>
                         <div className="flex items-center justify-between h-full w-full md:hidden">
                             <Image
-                                src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1736520354/Branding_yt0agf.png"
+                                src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755003537/Group_6_n0fihn.png"
                                 alt="Top Image"
-                                width={200}
-                                height={200}
-                                className="ssmd:w-1/4 mmd:w-1/5 w-1/3 h-auto "
+                                width={30}
+                                height={30}
+                                className=""
                             />
                             <button
                                 onClick={() => {

@@ -106,7 +106,7 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
 
   // Get relevant product categories based on skin concern
   const getRelevantCategories = (skinConcern: string): string[] => {
-    const baseCategories = ["cleansers", "moisturizers", "sunscreens"];
+    const baseCategories = ["cleansers", "moisturizers", "serum"];
     
     switch (skinConcern) {
       case "Pimples, blackheads, whiteheads, and clogged pores":
@@ -145,7 +145,7 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
           max: userProfile.routineType === "A complete routine for maximum results 7+ steps" ? 150 : 80
         }
       };
-
+      console.log('🔄 Preparing routine generation request:', requestPayload);
       console.log(`🚀 Generating skincare routine (attempt ${retryAttempt + 1}/${maxRetries + 1}):`, {
         skinType: requestPayload.skinType,
         concern: requestPayload.skinConcern,

@@ -152,10 +152,10 @@ const Authform = ({type}:{type:string}) => {
         <p className='text-base text-gray-600'>
           {type === 'sign-in' ? "Don't have an account?" : 'Already have an account?'}
           <Link 
-            href={type === 'sign-in' ? '/Sign-Up' : '/Sign-In'} 
+            href={type === 'sign-in' ? '/Sign-up' : '/Sign-in'} 
             className='ml-1 text-[#211D39] font-medium underline transition-colors duration-200'
           >
-            {type === 'sign-in' ? 'Sign Up' : 'Sign In'}
+            {type === 'sign-in' ? 'Sign up' : 'Sign in'}
           </Link>
         </p>
       </footer>

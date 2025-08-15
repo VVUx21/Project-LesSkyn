@@ -203,7 +203,7 @@ const ProductScraper = () => {
             >
               <option value="Cleanser">Cleanser</option>
               <option value="Facewash">Facewash</option>
-              <option value="Sunscream">Sunscream</option>
+              <option value="Serum">Serum</option>
               <option value="Moisturizer">Moisturizer</option>
             </select>
           </div>

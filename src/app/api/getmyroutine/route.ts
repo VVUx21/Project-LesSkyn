@@ -13,9 +13,6 @@ let productsCache: {
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
 const API_TIMEOUT = 9000; // 9 seconds timeout (under Vercel's 10s limit)
 
-/**
- * Filter and optimize products for AI processing
- */
 function filterAndOptimizeProducts(
   products: ProductData[],
   categories?: string[],
@@ -199,19 +196,19 @@ export async function POST(request: NextRequest) {
     }
 
     // Step 2: Filter and optimize products for AI
-    console.log('🔄 Filtering products...');
-    const optimizedProducts = filterAndOptimizeProducts(
-      allProducts,
-      categories,
-      priceRange,
-    );
+    // console.log('🔄 Filtering products...');
+    // const optimizedProducts = filterAndOptimizeProducts(
+    //   allProducts,
+    //   categories,
+    //   priceRange,
+    // );
 
-    console.log(`📊 Processing ${optimizedProducts.length} products for AI analysis`);
+    // console.log(`📊 Processing ${optimizedProducts.length} products for AI analysis`);
 
     // Step 3: Generate routine (non-blocking)
     console.log('🤖 Generating skincare routine...');
     const routine = await processRoutineGeneration(
-      optimizedProducts,
+      allProducts,
       skinType,
       skinConcern,
       commitmentLevel,
@@ -228,7 +225,7 @@ export async function POST(request: NextRequest) {
         data: routine,
         metadata: {
           totalProducts: allProducts.length,
-          analyzedProducts: optimizedProducts.length,
+          analyzedProducts: allProducts.length,
           processingTime,
           cached: productsCache ? (Date.now() - productsCache.timestamp) < CACHE_TTL : false
         }
@@ -285,6 +282,5 @@ export async function POST(request: NextRequest) {
 //   );
 // }
 
-// Export configuration for API route
-export const runtime = 'nodejs'; // Use Node.js runtime for better performance
-export const maxDuration = 10; // Maximum duration in seconds (Vercel limit)
+export const runtime = 'nodejs'; 
+export const maxDuration = 10; 

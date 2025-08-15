@@ -15,7 +15,7 @@ const Mobilenavbar = ({
     return (
         <>
             <div
-                className={`fixed inset-0 z-50 md:hidden bg-black transition-opacity duration-300 ${
+                className={`fixed inset-0 z-50 md:hidden bg-[#211D39]/70 transition-opacity duration-300 ${
                     isMenuOpen
                         ? "opacity-100 "
                         : "opacity-0 pointer-events-none"
@@ -36,17 +36,7 @@ const Mobilenavbar = ({
                                     About Us
                                 </Link>
                             </li>
-                            <li>
-                                <Link
-                                    href={"/events"}
-                                    onClick={closeNavbar}
-                                    className="block px-4 py-2 text-2xl text-white transition duration-300 hover:text-[#CBFFFF]"
-                                >
-                                    Events
-                                </Link>
-                            </li>
-
-                            {["Sponsors", "FAQs", "Contact Us"].map(
+                            {['Sign-in','Sign-up','scrape_products'].map(
                                 (section, index) => (
                                     <li key={index} className="text-center">
                                         <Link

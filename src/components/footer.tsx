@@ -37,9 +37,9 @@ export default function Contact() {
         <h1 className='font-archivoBlack font-normal text-[16px] sm:text-[25px] 2xl:text-[32px]'>Site map</h1>
         <ul className='mt-5'>
           {
-            ['About us','Prizes','Sponsors','FAQs'].map((item, index) => {
+            ['Sign-in','Sign-up','scrape_products'].map((item, index) => {
                 return <li key={index} className='text-[12px] sm:text-[20px]  hover:scale-105 2xl:text-[25px] font-archivo font-semibold mb-2 flex items-center gap-3'>
-                   <a href={`#${item.toLowerCase().replace(/\s+/g, '')}`}>{item}</a>
+                   <a href={`/${item}`}>{item}</a>
                   <ArrowRightIcon
                     className='sm:w-[18px] w-2 h-2'
                     aria-label="icon"
