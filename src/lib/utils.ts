@@ -101,3 +101,17 @@ export const formatNumber = (num: number = 0) => {
     maximumFractionDigits: 0,
   });
 };
+
+/**
+ * Helper function to safely parse JSON (keeping your existing function)
+ */
+export function safeParseGeminiJSON(jsonString: string) {
+  try {
+    // Remove any potential markdown formatting
+    const cleanJson = jsonString.replace(/```json\n?|\n?```/g, '').trim();
+    return JSON.parse(cleanJson);
+  } catch (error) {
+    console.error("JSON parsing error:", error);
+    throw error;
+  }
+}

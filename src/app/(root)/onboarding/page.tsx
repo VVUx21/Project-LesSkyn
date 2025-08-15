@@ -40,8 +40,7 @@ export default function OnboardingPage() {
 // }, [User]);
 
   const handleComplete = () => {
-    updateUserProfile({ completedOnboarding: true })
-    router.push("/dashboard")
+    router.push("/")
   }
 
   const steps = [

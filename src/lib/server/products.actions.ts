@@ -27,12 +27,6 @@ interface UploadResponse {
   error?: string;
 }
 
-interface FetchResponse {
-  success: boolean;
-  products?: ProductData[];
-  error?: string;
-}
-
 export async function uploadProductData(productData: ProductData): Promise<UploadResponse> {
   try {
     if (!productData.url || !productData.title || !productData.currency) {
@@ -75,48 +69,108 @@ export async function uploadProductData(productData: ProductData): Promise<Uploa
   }
 }
 
-export async function fetchAllProducts(
-  limit: number = 100,
-  offset: number = 0
+interface FetchResponse {
+  success: boolean;
+  products: ProductData[];
+  error?: string;
+  totalCount?: number;
+}
+
+// Enhanced version of fetchAllProducts with optimizations
+export async function fetchAllProductsOptimized(
+  limit: number = 200,
+  offset: number = 0,
+  categories?: string[],
+  priceRange?: { min: number; max: number }
 ): Promise<FetchResponse> {
   try {
-    const { database } = await createAdminClient();
-    // Fetch documents from Appwrite
+    const queries: string[] = [
+      Query.limit(Math.min(limit, 1000)), // Appwrite has a max limit
+      Query.offset(offset),
+      Query.orderDesc('discountRate') // Then by discount
+    ];
+
+    if (categories && categories.length > 0) {
+      const categoryQueries = categories.map(category => 
+        Query.contains('category', category)
+      );
+      queries.push(Query.or(categoryQueries));
+    }
+
+    if (priceRange) {
+      queries.push(Query.greaterThanEqual('currentPrice', priceRange.min));
+      queries.push(Query.lessThanEqual('currentPrice', priceRange.max));
+    }
+
+    queries.push(Query.select([
+      'url',
+      'title', 
+      'currency',
+      'currentPrice',
+      'originalPrice',
+      'discountRate',
+      'category',
+      'reviewsCount',
+      'stars',
+      'image',
+      'description'
+    ]));
+
+    console.log(`🔍 Executing database query with ${queries.length} conditions`);
+    const {database} = await createAdminClient();
+    // Execute the query
     const response = await database.listDocuments(
       DATABASE_ID!,
       PRODUCTS_COLLECTION_ID!,
-      [
-        Query.limit(limit),
-        Query.offset(offset),
-        Query.orderDesc('createdAt') // Order by creation date, newest first
-      ]
+      queries
     );
 
-    const products: ProductData[] = response.documents.map((doc) => ({
-      url: doc.url,
-      title: doc.title,
-      currency: doc.currency,
-      currentPrice: doc.currentPrice,
-      originalPrice: doc.originalPrice,
-      discountRate: doc.discountRate,
-      category: doc.category,
-      rating: doc.rating,
-      reviewsCount: doc.reviewsCount,
-      stars: doc.stars,
-      image: doc.image,
-      description: doc.description
+    // Transform documents to ProductData format
+    const products: ProductData[] = response.documents.map((doc: any) => ({
+      url: doc.url || '',
+      title: doc.title || '',
+      currency: doc.currency || 'USD',
+      currentPrice: parseFloat(doc.currentPrice) || 0,
+      originalPrice: parseFloat(doc.originalPrice) || 0,
+      discountRate: parseFloat(doc.discountRate) || 0,
+      category: doc.category || '',
+      reviewsCount: parseInt(doc.reviewsCount) || 0,
+      stars: doc.stars ? parseFloat(doc.stars) : undefined,
+      image: doc.image || '',
+      description: doc.description || ''
     }));
+
+    console.log(`✅ Fetched ${products.length} products from database`);
 
     return {
       success: true,
-      products
+      products,
+      totalCount: response.total
     };
 
-  } catch (error: unknown) {
-    console.error('Error fetching products:', error);
+  } catch (error: any) {
+    console.error('❌ Error fetching products from database:', error);
+    
+    if (error.code === 401) {
+      return {
+        success: false,
+        products: [],
+        error: 'Database authentication failed'
+      };
+    }
+    
+    if (error.code === 404) {
+      return {
+        success: false,
+        products: [],
+        error: 'Database or collection not found'
+      };
+    }
+
     return {
       success: false,
-      error: (error as Error).message || 'Failed to fetch products'
+      products: [],
+      error: error.message || 'Failed to fetch products from database'
     };
   }
 }
