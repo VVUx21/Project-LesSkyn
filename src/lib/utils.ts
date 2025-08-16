@@ -1,6 +1,7 @@
 import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { z } from "zod";
+import data from "./data";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -105,13 +106,30 @@ export const formatNumber = (num: number = 0) => {
 /**
  * Helper function to safely parse JSON (keeping your existing function)
  */
-export function safeParseGeminiJSON(jsonString: string) {
-  try {
-    // Remove any potential markdown formatting
-    const cleanJson = jsonString.replace(/```json\n?|\n?```/g, '').trim();
-    return JSON.parse(cleanJson);
-  } catch (error) {
-    console.error("JSON parsing error:", error);
-    throw error;
-  }
+export function cleanGeminiResponse(response: string): string {
+  return response
+    .replace(/```json\s*/g, "") // remove ```json
+    .replace(/```/g, "")        // remove ```
+    .replace(/\n/g, " ")        // normalize newlines
+    .replace(/,\s*}/g, "}")     // remove trailing commas before }
+    .replace(/,\s*]/g, "]")     // remove trailing commas before ]
+    .trim();
+}
+
+export function findMatchingSkinProfile(skinType: string, skinConcern: string, commitmentLevel: string, preferredProducts: string) {
+  return data.find(profile => 
+    profile["Skin type"] === skinType &&
+    profile["Concern"] === skinConcern &&
+    profile["Commitment Level"] === commitmentLevel &&
+    profile["Preferred Skincare Ingredients/Products"] === preferredProducts
+  );
+}
+
+export function extractKeyIngredients(profile: any): string[] {
+  if (!profile["Essential Ingredients to Look For"]) return [];
+  
+  return profile["Essential Ingredients to Look For"]
+    .split('•')
+    .map((ingredient: string) => ingredient.trim())
+    .filter((ingredient: string) => ingredient.length > 0);
 }

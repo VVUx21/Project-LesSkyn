@@ -66,3 +66,31 @@ export interface GenerateRoutineRequest {
     max: number;
   };
 }
+
+
+export interface SkincareRoutineRequest {
+  skinType: string;
+  skinConcern: string;
+  commitmentLevel: string;
+  preferredProducts: string;
+  limit?: number;
+  categories?: string[];
+  priceRange?: {
+    min: number;
+    max: number;
+  };
+}
+
+export interface SkincareRoutineResponse {
+  success: boolean;
+  data?: any;
+  error?: string;
+  details?: string[];
+  metadata?: {
+    totalProducts: number;
+    analyzedProducts: number;
+    processingTime: number;
+    cached: boolean;
+  };
+  processingTime?: number;
+}

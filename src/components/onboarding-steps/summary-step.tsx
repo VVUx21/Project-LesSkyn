@@ -2,39 +2,13 @@
 import { useSkinCare } from "@/context/skin-care-context"
 import { Button } from "@/components/ui/button"
 import { Check, Loader2, AlertCircle, RefreshCw } from "lucide-react"
+import { SkincareRoutineRequest,SkincareRoutineResponse } from "@/lib/types"
 import Image from "next/image"
 import { useCallback, useState } from "react"
 import React from "react"
 
 interface SummaryStepProps {
   onComplete: () => void
-}
-
-interface SkincareRoutineRequest {
-  skinType: string;
-  skinConcern: string;
-  commitmentLevel: string;
-  preferredProducts: string;
-  limit?: number;
-  categories?: string[];
-  priceRange?: {
-    min: number;
-    max: number;
-  };
-}
-
-interface SkincareRoutineResponse {
-  success: boolean;
-  data?: any;
-  error?: string;
-  details?: string[];
-  metadata?: {
-    totalProducts: number;
-    analyzedProducts: number;
-    processingTime: number;
-    cached: boolean;
-  };
-  processingTime?: number;
 }
 
 export default function SummaryStep({ onComplete }: SummaryStepProps) {
@@ -97,7 +71,7 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
     if (routineType === "A complete routine for maximum results 7+ steps") {
       return "Premium";
     } else if (routineType === "A simple, no-fuss routine with just the essentials 3-4 steps") {
-      return "Budget-friendly";
+      return "Natural/Organic Products";
     } else if (skinConcern.includes("Irritation") || skinConcern.includes("Sensitive")) {
       return "Dermatologist Recommended";
     }
@@ -125,127 +99,196 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
   };
 
   // Generate skincare routine with retry logic
-  const generateSkincareRoutine = useCallback(async (retryAttempt: number = 0): Promise<SkincareRoutineResponse> => {
-    const maxRetries = 3;
-    const timeout = 15000; // 15 seconds timeout
+  const generateSkincareRoutine = useCallback(async (useStreaming: boolean = true): Promise<SkincareRoutineResponse> => {
+  const timeout = 60000; // 60 seconds timeout
+  
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+  try {
+    const requestPayload: SkincareRoutineRequest = {
+      skinType: mapSkinTypeToAPI(userProfile.skinType),
+      skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
+      commitmentLevel: mapRoutineTypeToAPI(userProfile.routineType),
+      preferredProducts: determinePreferredProducts(userProfile.routineType, userProfile.skinConcern),
+      limit: 150,
+      categories: getRelevantCategories(userProfile.skinConcern),
+      priceRange: {
+        min: 5,
+        max: userProfile.routineType === "A complete routine for maximum results 7+ steps" ? 150 : 80
+      }
+    };
+
+    console.log('🚀 Generating skincare routine:', {
+      skinType: requestPayload.skinType,
+      concern: requestPayload.skinConcern,
+      commitment: requestPayload.commitmentLevel,
+      streaming: useStreaming
+    });
+
+    const startTime = Date.now();
+    const endpoint = `/api/getmyroutine${useStreaming ? '?stream=true' : ''}`;
     
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), timeout);
+    if (useStreaming) {
+      return await handleStreamingResponse(requestPayload, controller, startTime, timeoutId);
+    } else {
+      return await handleRegularResponse(requestPayload, controller, startTime, timeoutId);
+    }
 
+  } catch (error: any) {
+    clearTimeout(timeoutId);
+    console.error('❌ Routine generation failed:', error.message);
+    
+    if (error.name === 'AbortError') {
+      throw new Error('Request timeout - please try again');
+    }
+    
+    if (error.message?.includes('fetch')) {
+      throw new Error('Network error - please check your connection');
+    }
+    
+    throw error;
+  }
+}, [userProfile, updateUserProfile]);
+
+const handleStreamingResponse = async (
+  requestPayload: SkincareRoutineRequest,
+  controller: AbortController,
+  startTime: number,
+  timeoutId: NodeJS.Timeout
+): Promise<SkincareRoutineResponse> => {
+  const response = await fetch('/api/getmyroutine?stream=true', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestPayload),
+    signal: controller.signal,
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `HTTP ${response.status}`);
+  }
+
+  const reader = response.body?.getReader();
+  const decoder = new TextDecoder();
+  let finalResult: any = null;
+
+  if (reader) {
     try {
-      const requestPayload: SkincareRoutineRequest = {
-        skinType: mapSkinTypeToAPI(userProfile.skinType),
-        skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
-        commitmentLevel: mapRoutineTypeToAPI(userProfile.routineType),
-        preferredProducts: determinePreferredProducts(userProfile.routineType, userProfile.skinConcern),
-        limit: 150, // Reasonable limit for good selection
-        categories: getRelevantCategories(userProfile.skinConcern),
-        priceRange: {
-          min: 5,
-          max: userProfile.routineType === "A complete routine for maximum results 7+ steps" ? 150 : 80
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        const chunk = decoder.decode(value);
+        const lines = chunk.split('\n');
+
+        for (const line of lines) {
+          if (line.startsWith('data: ')) {
+            try {
+              const data = JSON.parse(line.slice(6));
+              
+              if (data.type === 'metadata') {
+                console.log('📊 Metadata:', data.data);
+              } else if (data.type === 'partial') {
+                console.log('🔄 Progress:', data.accumulated, 'characters processed');
+              } else if (data.type === 'complete') {
+                console.log('✅ Routine completed');
+                finalResult = data.data;
+                clearTimeout(timeoutId);
+                break;
+              } else if (data.type === 'error') {
+                throw new Error(data.error || 'Stream processing failed');
+              }
+            } catch (parseError) {
+              console.warn('Failed to parse streaming data:', line);
+            }
+          }
         }
-      };
-      console.log('🔄 Preparing routine generation request:', requestPayload);
-      console.log(`🚀 Generating skincare routine (attempt ${retryAttempt + 1}/${maxRetries + 1}):`, {
-        skinType: requestPayload.skinType,
-        concern: requestPayload.skinConcern,
-        commitment: requestPayload.commitmentLevel,
-        preferred: requestPayload.preferredProducts,
-        categories: requestPayload.categories?.slice(0, 3) // Log first 3 categories
-      });
 
-      const startTime = Date.now();
-      
-      const response = await fetch('/api/getmyroutine', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(requestPayload),
-        signal: controller.signal,
-      });
-
-      clearTimeout(timeoutId);
-      const responseTime = Date.now() - startTime;
-      setProcessingTime(responseTime);
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        if (finalResult) break;
       }
-
-      const data: SkincareRoutineResponse = await response.json();
-      
-      if (data.success) {
-        console.log('✅ Routine generated successfully:', {
-          processingTime: data.metadata?.processingTime || responseTime,
-          productsAnalyzed: data.metadata?.analyzedProducts,
-          cached: data.metadata?.cached,
-          totalTime: responseTime
-        });
-        
-        // Store routine in user profile context
-        updateUserProfile({ 
-          generatedRoutine: data.data,
-        });
-        
-        return data;
-      } else {
-        throw new Error(data.error || 'Failed to generate routine');
-      }
-
-    } catch (error: any) {
-      clearTimeout(timeoutId);
-      
-      console.error(`❌ Routine generation failed (attempt ${retryAttempt + 1}):`, error.message);
-      
-      // Handle specific error types
-      if (error.name === 'AbortError') {
-        throw new Error('Request timeout - the server took too long to respond');
-      }
-      
-      if (error.message?.includes('fetch')) {
-        throw new Error('Network error - please check your connection');
-      }
-      
-      // Retry logic for certain errors
-      if (retryAttempt < maxRetries && 
-          (error.message?.includes('timeout') || 
-           error.message?.includes('500') || 
-           error.message?.includes('503'))) {
-        
-        const delay = Math.min(1000 * Math.pow(2, retryAttempt), 5000); // Exponential backoff
-        console.log(`🔄 Retrying in ${delay}ms...`);
-        
-        await new Promise(resolve => setTimeout(resolve, delay));
-        return generateSkincareRoutine(retryAttempt + 1);
-      }
-      
-      throw error;
-    }
-  }, [userProfile, updateUserProfile]);
-
-  const handleGenerateRoutine = useCallback(async () => {
-    setIsGenerating(true);
-    setError(null);
-    setRetryCount(0);
-    setProcessingTime(null);
-
-    try {
-      await generateSkincareRoutine();
-      onComplete(); // Navigate to results page
-    } catch (err: any) {
-      setError(err.message || 'Failed to generate skincare routine');
-      console.error('❌ Final error:', err);
     } finally {
-      setIsGenerating(false);
+      reader.releaseLock();
     }
-  }, [generateSkincareRoutine, onComplete]);
+  }
 
-  const handleRetry = useCallback(() => {
-    setRetryCount(prev => prev + 1);
-    handleGenerateRoutine();
-  }, [handleGenerateRoutine]);
+  if (!finalResult) {
+    throw new Error('No complete routine received from stream');
+  }
+
+  const responseTime = Date.now() - startTime;
+  setProcessingTime(responseTime);
+
+  updateUserProfile({ generatedRoutine: finalResult });
+
+  return {
+    success: true,
+    data: finalResult,
+    metadata: { 
+      processingTime: responseTime,
+      totalProducts: 0,
+      analyzedProducts: 0,
+      cached: false
+     }
+  };
+};
+
+const handleRegularResponse = async (
+  requestPayload: SkincareRoutineRequest,
+  controller: AbortController,
+  startTime: number,
+  timeoutId: NodeJS.Timeout
+): Promise<SkincareRoutineResponse> => {
+  const response = await fetch('/api/getmyroutine', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestPayload),
+    signal: controller.signal,
+  });
+
+  clearTimeout(timeoutId);
+  const responseTime = Date.now() - startTime;
+  setProcessingTime(responseTime);
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.error || `HTTP ${response.status}`);
+  }
+
+  const data: SkincareRoutineResponse = await response.json();
+  
+  if (!data.success) {
+    throw new Error(data.error || 'Failed to generate routine');
+  }
+
+  console.log('✅ Routine generated:', {
+    processingTime: data.metadata?.processingTime || responseTime,
+    productsAnalyzed: data.metadata?.analyzedProducts
+  });
+
+  updateUserProfile({ generatedRoutine: data.data });
+  return data;
+};
+
+const handleGenerateRoutine = useCallback(async (useStreaming: boolean = true) => {
+  setIsGenerating(true);
+  setError(null);
+  setProcessingTime(null);
+
+  try {
+    await generateSkincareRoutine(useStreaming);
+    onComplete();
+  } catch (err: any) {
+    setError(err.message || 'Failed to generate skincare routine');
+    console.error('❌ Final error:', err);
+  } finally {
+    setIsGenerating(false);
+  }
+}, [generateSkincareRoutine, onComplete]);
+
+const handleRetry = useCallback(() => {
+  handleGenerateRoutine(false); // Use regular mode for retry
+}, [handleGenerateRoutine]);
 
   // Display labels (keep existing functions)
   const getSkinTypeLabel = () => {
@@ -400,27 +443,21 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
         </Button>
         <Button 
           className="bg-[#211D39] text-amber-50 min-w-[140px]"
-          onClick={handleGenerateRoutine}
+          onClick={() => handleGenerateRoutine(true)} // Explicitly enable streaming
           disabled={isGenerating}
         >
           {isGenerating ? (
             <>
               <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              Generating...
+              <span className="text-sm">
+                {processingTime ? `${Math.floor(processingTime/1000)}s` : 'Generating...'}
+              </span>
             </>
           ) : (
             "Get My Routine"
           )}
         </Button>
       </div>
-
-      {/* Debug Info (remove in production) */}
-      {process.env.NODE_ENV === 'development' && processingTime && (
-        <div className="text-xs text-gray-500 mt-2">
-          API Response Time: {(processingTime / 1000).toFixed(2)}s
-          {retryCount > 0 && ` | Retries: ${retryCount}`}
-        </div>
-      )}
     </div>
   )
 }

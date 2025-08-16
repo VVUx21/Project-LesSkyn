@@ -1,47 +1,29 @@
 'use server';
 import { GoogleGenAI, Type } from "@google/genai";
 import { safetySettings } from "../Aiconfig";
-import data from "../data"
-import { ProductData,SkincareRoutine, RoutineStep } from "../types";
+import { cleanGeminiResponse, findMatchingSkinProfile, extractKeyIngredients } from "../utils";
+import { ProductData, SkincareRoutine } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
-function findMatchingSkinProfile(skinType: string, skinConcern: string, commitmentLevel: string, preferredProducts: string) {
-  return data.find(profile => 
-    profile["Skin type"] === skinType &&
-    profile["Concern"] === skinConcern &&
-    profile["Commitment Level"] === commitmentLevel &&
-    profile["Preferred Skincare Ingredients/Products"] === preferredProducts
-  );
-}
-
-function extractKeyIngredients(profile: any): string[] {
-  if (!profile["Essential Ingredients to Look For"]) return [];
-  
-  return profile["Essential Ingredients to Look For"]
-    .split('•')
-    .map((ingredient: string) => ingredient.trim())
-    .filter((ingredient: string) => ingredient.length > 0);
-}
-
-async function generateSkincareRoutine(
+async function* generateSkincareRoutineStream(
   products: ProductData[],
   skinType: string,
   skinConcern: string,
   commitmentLevel: string,
   preferredProducts: string
-): Promise<SkincareRoutine | null> {
-
+): AsyncGenerator<string, void, unknown> {
   try {
     // Find matching skin profile from data
+    console.log(skinType, skinConcern, commitmentLevel, preferredProducts);
     const matchingProfile = findMatchingSkinProfile(skinType, skinConcern, commitmentLevel, preferredProducts);
     
     if (!matchingProfile) {
       console.error("No matching skin profile found");
-      return null;
+      yield JSON.stringify({ error: "No matching skin profile found" });
+      return;
     }
 
-    // Extract essential ingredients and routine information
     const essentialIngredients = extractKeyIngredients(matchingProfile);
     const weeklyTreatments = matchingProfile["Weekly Treatments"] || "";
     const otherSuggestions = matchingProfile["Other Suggestion"] || "";
@@ -56,11 +38,12 @@ async function generateSkincareRoutine(
       category: p.category,
       currentPrice: p.currentPrice,
       currency: p.currency,
+      image: p.image,
       originalPrice: p.originalPrice,
       discountRate: p.discountRate
     }));
 
-    const response = await ai.models.generateContent({
+    const stream = await ai.models.generateContentStream({
       model: "gemini-2.5-flash",
       contents: [
         {
@@ -91,8 +74,8 @@ async function generateSkincareRoutine(
 
                 **INSTRUCTIONS:**
                 1. Create EXACTLY 4 steps for both AM and PM routines
-                2. AM: Step 1 (Cleanser) → Step 2 (Serum/Treatment) → Step 3 (Moisturizer) → Step 4 (Sunscreen)
-                3. PM: Step 1 (Cleanser) → Step 2 (Active Treatment) → Step 3 (Moisturizer) → Step 4 (Night Care/Optional)
+                2. AM: Step 1 (Cleanser) → Step 2 (Serum/Treatment) → Step 3 (Facewash) → Step 4 (Moisturizer)
+                3. PM: Step 1 (Cleanser) → Step 2 (Active Treatment) → Step 3 (Facewash) → Step 4 (Moisturizer)
                 4. Match products based on their ingredients with the essential ingredients list
                 5. Consider price constraints from "Other Suggestion"
                 6. For each step, explain WHY this specific product is chosen and HOW to use it
@@ -351,27 +334,112 @@ async function generateSkincareRoutine(
       }
     });
 
-    const jsonResponse = response.text;
-    if (!jsonResponse) {
-      console.error("❌ Gemini response text is undefined.");
-      return null;
+    let accumulatedResponse = '';
+    
+    // Stream the response chunks
+    for await (const chunk of stream) {
+      if (chunk?.text) {
+        //console.log('🤖 GEMINI CHUNK:', chunk.text.length, 'chars');
+        accumulatedResponse += chunk.text;
+        
+        // Try to parse partial JSON and yield valid chunks
+        try {
+          const cleanedChunk = cleanGeminiResponse(accumulatedResponse);
+          
+          // Check if we have a complete JSON object
+          if (isValidJSON(cleanedChunk)) {
+            yield JSON.stringify({ 
+              type: 'complete',
+              data: JSON.parse(cleanedChunk)
+            });
+            return;
+          } else {
+            // Yield partial content for progressive loading
+            yield JSON.stringify({ 
+              type: 'partial',
+              chunk: chunk.text,
+              accumulated: accumulatedResponse.length
+            });
+          }
+        } catch (err) {
+          // Continue accumulating if JSON is not complete yet
+          yield JSON.stringify({ 
+            type: 'partial',
+            chunk: chunk.text,
+            accumulated: accumulatedResponse.length
+          });
+        }
+      }
     }
 
-    let parsedRoutine = null;
-    try {
-      parsedRoutine = JSON.parse(jsonResponse);
-    } catch (err) {
-      console.error("❌ Failed to parse Gemini response:", err);
-      console.error("Raw response:", jsonResponse);
-      return null;
+    // Final processing
+    if (accumulatedResponse) {
+      try {
+        const cleanedResponse = cleanGeminiResponse(accumulatedResponse);
+        const parsedRoutine = JSON.parse(cleanedResponse);
+        yield JSON.stringify({ 
+          type: 'complete',
+          data: parsedRoutine
+        });
+      } catch (err) {
+        console.error("❌ Failed to parse final response:", err);
+        yield JSON.stringify({ 
+          type: 'error',
+          error: 'Failed to parse complete response'
+        });
+      }
     }
-
-    return parsedRoutine as SkincareRoutine;
 
   } catch (err) {
     console.error("Gemini request failed:", err);
+    yield JSON.stringify({ 
+      type: 'error',
+      error: 'Request failed'
+    });
+  }
+}
+
+// Helper function to check if a string is valid JSON
+function isValidJSON(str: string): boolean {
+  try {
+    JSON.parse(str);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// Keep the original function for backward compatibility
+async function generateSkincareRoutine(
+  products: ProductData[],
+  skinType: string,
+  skinConcern: string,
+  commitmentLevel: string,
+  preferredProducts: string
+): Promise<SkincareRoutine | null> {
+  
+  let finalResult: SkincareRoutine | null = null;
+  
+  try {
+    const stream = generateSkincareRoutineStream(products, skinType, skinConcern, commitmentLevel, preferredProducts);
+    
+    for await (const chunk of stream) {
+      const parsedChunk = JSON.parse(chunk);
+      if (parsedChunk.type === 'complete') {
+        finalResult = parsedChunk.data;
+        break;
+      } else if (parsedChunk.type === 'error') {
+        console.error('Stream error:', parsedChunk.error);
+        return null;
+      }
+    }
+    
+    return finalResult;
+  } catch (err) {
+    console.error("Stream processing failed:", err);
     return null;
   }
 }
 
 export default generateSkincareRoutine;
+export { generateSkincareRoutineStream };

@@ -67,7 +67,7 @@ const data = [
         },
         {
           "Skin type": "Normal",
-          "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
+          "Concern": "Anti-aging",
           "Commitment Level": "Minimal",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Retinol/Retinoids• Peptides• Vitamin C• Hyaluronic Acid• Niacinamide• Coenzyme Q10• Bakuchiol• AHAs• Antioxidants",
