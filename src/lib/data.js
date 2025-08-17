@@ -299,7 +299,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Clear Acne & Breakouts",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Salicylic Acid (2%)• Niacinamide (5-10%)• Tea Tree Oil• Benzoyl Peroxide (2.5-5%)• Sulfur• Neem Extract• Turmeric Extract• Azeleic Acid",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -310,7 +310,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Oiliness & Shine",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Niacinamide (10%)• Kaolin Clay• Green Tea Extract• Witch Hazel• Hyaluronic Acid (lightweight)• Glycolic Acid• Salicylic Acid• Zinc PCA",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -321,7 +321,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Hydrate Dry Skin",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Hyaluronic Acid• Glycerin• Squalane• Ceramides• Shea Butter• Rosehip Oil• Aloe Vera• Honey• Panthenol",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -332,7 +332,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Minimize Pores & Blackheads",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Salicylic Acid• Retinol (0.3-1%)• Niacinamide (10%)• Glycolic Acid• Clay (Bentonite/Kaolin)• AHAs• Charcoal• Vitamin C",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -343,7 +343,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Vitamin C (5-20%)• Alpha Arbutin• Tranexamic Acid• Kojic Acid• Niacinamide• Licorice Root Extract• Glycolic Acid• Azelaic Acid",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -354,7 +354,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Redness & Sensitivity",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Centella Asiatica (Cica)• Aloe Vera• Green Tea Extract• Ceramides• Colloidal Oatmeal• Panthenol• Allantoin• Bisabolol• Madecassoside",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -365,7 +365,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Retinol/Retinoids• Peptides• Vitamin C• Hyaluronic Acid• Niacinamide• Coenzyme Q10• Bakuchiol• AHAs• Antioxidants",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -376,7 +376,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Improve Skin Firmness & Elasticity",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Peptides• Collagen• Elastin• Retinol• DMAE• Vitamin C• Hydrolyzed Protein• Amino Acids• Hyaluronic Acid",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -387,7 +387,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Achieve a Natural Glow",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Vitamin C• Alpha Hydroxy Acids (AHAs)• Niacinamide• Hyaluronic Acid• Rosehip Oil• Antioxidants• Saffron Extract• Turmeric Extract",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -398,7 +398,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Clear Acne & Breakouts",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Salicylic Acid (2%)• Niacinamide (5-10%)• Tea Tree Oil• Benzoyl Peroxide (2.5-5%)• Sulfur• Neem Extract• Turmeric Extract• Azeleic Acid",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -409,7 +409,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Oiliness & Shine",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Niacinamide (10%)• Kaolin Clay• Green Tea Extract• Witch Hazel• Hyaluronic Acid (lightweight)• Glycolic Acid• Salicylic Acid• Zinc PCA",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -420,7 +420,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Hydrate Dry Skin",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Hyaluronic Acid• Glycerin• Squalane• Ceramides• Shea Butter• Rosehip Oil• Aloe Vera• Honey• Panthenol",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -431,7 +431,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Minimize Pores & Blackheads",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Salicylic Acid• Retinol (0.3-1%)• Niacinamide (10%)• Glycolic Acid• Clay (Bentonite/Kaolin)• AHAs• Charcoal• Vitamin C",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -442,7 +442,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Vitamin C (5-20%)• Alpha Arbutin• Tranexamic Acid• Kojic Acid• Niacinamide• Licorice Root Extract• Glycolic Acid• Azelaic Acid",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -453,7 +453,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Redness & Sensitivity",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Centella Asiatica (Cica)• Aloe Vera• Green Tea Extract• Ceramides• Colloidal Oatmeal• Panthenol• Allantoin• Bisabolol• Madecassoside",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -464,7 +464,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Retinol/Retinoids• Peptides• Vitamin C• Hyaluronic Acid• Niacinamide• Coenzyme Q10• Bakuchiol• AHAs• Antioxidants",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -475,7 +475,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Improve Skin Firmness & Elasticity",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Peptides• Collagen• Elastin• Retinol• DMAE• Vitamin C• Hydrolyzed Protein• Amino Acids• Hyaluronic Acid",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -486,7 +486,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Achieve a Natural Glow",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Vitamin C• Alpha Hydroxy Acids (AHAs)• Niacinamide• Hyaluronic Acid• Rosehip Oil• Antioxidants• Saffron Extract• Turmeric Extract",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -497,7 +497,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Clear Acne & Breakouts",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Salicylic Acid (2%)• Niacinamide (5-10%)• Tea Tree Oil• Benzoyl Peroxide (2.5-5%)• Sulfur• Neem Extract• Turmeric Extract• Azeleic Acid",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -508,7 +508,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Oiliness & Shine",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Niacinamide (10%)• Kaolin Clay• Green Tea Extract• Witch Hazel• Hyaluronic Acid (lightweight)• Glycolic Acid• Salicylic Acid• Zinc PCA",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -519,7 +519,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Hydrate Dry Skin",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Hyaluronic Acid• Glycerin• Squalane• Ceramides• Shea Butter• Rosehip Oil• Aloe Vera• Honey• Panthenol",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -530,7 +530,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Minimize Pores & Blackheads",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Salicylic Acid• Retinol (0.3-1%)• Niacinamide (10%)• Glycolic Acid• Clay (Bentonite/Kaolin)• AHAs• Charcoal• Vitamin C",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -541,7 +541,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Vitamin C (5-20%)• Alpha Arbutin• Tranexamic Acid• Kojic Acid• Niacinamide• Licorice Root Extract• Glycolic Acid• Azelaic Acid",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -552,7 +552,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Redness & Sensitivity",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Centella Asiatica (Cica)• Aloe Vera• Green Tea Extract• Ceramides• Colloidal Oatmeal• Panthenol• Allantoin• Bisabolol• Madecassoside",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -563,7 +563,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Retinol/Retinoids• Peptides• Vitamin C• Hyaluronic Acid• Niacinamide• Coenzyme Q10• Bakuchiol• AHAs• Antioxidants",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -574,7 +574,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Improve Skin Firmness & Elasticity",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Peptides• Collagen• Elastin• Retinol• DMAE• Vitamin C• Hydrolyzed Protein• Amino Acids• Hyaluronic Acid",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -585,7 +585,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Achieve a Natural Glow",
-          "Commitment Level": "Moderate",
+          "Commitment Level": "Standard",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Vitamin C• Alpha Hydroxy Acids (AHAs)• Niacinamide• Hyaluronic Acid• Rosehip Oil• Antioxidants• Saffron Extract• Turmeric Extract",
           "Product Suggestion AM": "Facewash<br>Antioxidant serum (like Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -596,7 +596,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Clear Acne & Breakouts",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Salicylic Acid (2%)• Niacinamide (5-10%)• Tea Tree Oil• Benzoyl Peroxide (2.5-5%)• Sulfur• Neem Extract• Turmeric Extract• Azeleic Acid",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -607,7 +607,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Oiliness & Shine",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Niacinamide (10%)• Kaolin Clay• Green Tea Extract• Witch Hazel• Hyaluronic Acid (lightweight)• Glycolic Acid• Salicylic Acid• Zinc PCA",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -618,7 +618,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Hydrate Dry Skin",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Hyaluronic Acid• Glycerin• Squalane• Ceramides• Shea Butter• Rosehip Oil• Aloe Vera• Honey• Panthenol",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -629,7 +629,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Minimize Pores & Blackheads",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Salicylic Acid• Retinol (0.3-1%)• Niacinamide (10%)• Glycolic Acid• Clay (Bentonite/Kaolin)• AHAs• Charcoal• Vitamin C",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -640,7 +640,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Vitamin C (5-20%)• Alpha Arbutin• Tranexamic Acid• Kojic Acid• Niacinamide• Licorice Root Extract• Glycolic Acid• Azelaic Acid",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -651,7 +651,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Redness & Sensitivity",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Centella Asiatica (Cica)• Aloe Vera• Green Tea Extract• Ceramides• Colloidal Oatmeal• Panthenol• Allantoin• Bisabolol• Madecassoside",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -662,7 +662,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Retinol/Retinoids• Peptides• Vitamin C• Hyaluronic Acid• Niacinamide• Coenzyme Q10• Bakuchiol• AHAs• Antioxidants",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -673,7 +673,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Improve Skin Firmness & Elasticity",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Peptides• Collagen• Elastin• Retinol• DMAE• Vitamin C• Hydrolyzed Protein• Amino Acids• Hyaluronic Acid",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -684,7 +684,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Achieve a Natural Glow",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
           "Essential Ingredients to Look For": "• Vitamin C• Alpha Hydroxy Acids (AHAs)• Niacinamide• Hyaluronic Acid• Rosehip Oil• Antioxidants• Saffron Extract• Turmeric Extract",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -695,7 +695,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Clear Acne & Breakouts",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Salicylic Acid (2%)• Niacinamide (5-10%)• Tea Tree Oil• Benzoyl Peroxide (2.5-5%)• Sulfur• Neem Extract• Turmeric Extract• Azeleic Acid",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -706,7 +706,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Oiliness & Shine",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Niacinamide (10%)• Kaolin Clay• Green Tea Extract• Witch Hazel• Hyaluronic Acid (lightweight)• Glycolic Acid• Salicylic Acid• Zinc PCA",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -717,7 +717,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Hydrate Dry Skin",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Hyaluronic Acid• Glycerin• Squalane• Ceramides• Shea Butter• Rosehip Oil• Aloe Vera• Honey• Panthenol",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -728,7 +728,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Minimize Pores & Blackheads",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Salicylic Acid• Retinol (0.3-1%)• Niacinamide (10%)• Glycolic Acid• Clay (Bentonite/Kaolin)• AHAs• Charcoal• Vitamin C",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -739,7 +739,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Vitamin C (5-20%)• Alpha Arbutin• Tranexamic Acid• Kojic Acid• Niacinamide• Licorice Root Extract• Glycolic Acid• Azelaic Acid",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -750,7 +750,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Redness & Sensitivity",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Centella Asiatica (Cica)• Aloe Vera• Green Tea Extract• Ceramides• Colloidal Oatmeal• Panthenol• Allantoin• Bisabolol• Madecassoside",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -761,7 +761,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Retinol/Retinoids• Peptides• Vitamin C• Hyaluronic Acid• Niacinamide• Coenzyme Q10• Bakuchiol• AHAs• Antioxidants",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -772,7 +772,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Improve Skin Firmness & Elasticity",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Peptides• Collagen• Elastin• Retinol• DMAE• Vitamin C• Hydrolyzed Protein• Amino Acids• Hyaluronic Acid",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -783,7 +783,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Achieve a Natural Glow",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly",
           "Essential Ingredients to Look For": "• Vitamin C• Alpha Hydroxy Acids (AHAs)• Niacinamide• Hyaluronic Acid• Rosehip Oil• Antioxidants• Saffron Extract• Turmeric Extract",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -794,7 +794,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Clear Acne & Breakouts",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Salicylic Acid (2%)• Niacinamide (5-10%)• Tea Tree Oil• Benzoyl Peroxide (2.5-5%)• Sulfur• Neem Extract• Turmeric Extract• Azeleic Acid",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -805,7 +805,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Reduce Oiliness & Shine",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Niacinamide (10%)• Kaolin Clay• Green Tea Extract• Witch Hazel• Hyaluronic Acid (lightweight)• Glycolic Acid• Salicylic Acid• Zinc PCA",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -816,7 +816,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Hydrate Dry Skin",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Hyaluronic Acid• Glycerin• Squalane• Ceramides• Shea Butter• Rosehip Oil• Aloe Vera• Honey• Panthenol",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -827,7 +827,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Minimize Pores & Blackheads",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Salicylic Acid• Retinol (0.3-1%)• Niacinamide (10%)• Glycolic Acid• Clay (Bentonite/Kaolin)• AHAs• Charcoal• Vitamin C",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -838,7 +838,7 @@ const data = [
         {
           "Skin type": "Normal",
           "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-          "Commitment Level": "Intensive",
+          "Commitment Level": "Comprehensive",
           "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
           "Essential Ingredients to Look For": "• Vitamin C (5-20%)• Alpha Arbutin• Tranexamic Acid• Kojic Acid• Niacinamide• Licorice Root Extract• Glycolic Acid• Azelaic Acid",
           "Product Suggestion AM": "Facewash<br>Toner (hydrating/exfoliating)<br>Essence<br>Antioxidant serum (Vitamin C)<br>Moisturizer<br>Sunscreen",
@@ -849,7 +849,7 @@ const data = [
         {
             "Skin type": "Normal",
             "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-            "Commitment Level": "Intensive",
+            "Commitment Level": "Comprehensive",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
             "Essential Ingredients to Look For": "Vitamin C (5-20%), Alpha Arbutin, Tranexamic Acid, Kojic Acid, Niacinamide, Licorice Root Extract, Glycolic Acid, Azelaic Acid",
             "Product Suggestion AM": "Facewash, Toner (hydrating/exfoliating), Essence, Antioxidant serum (Vitamin C), Moisturizer, Sunscreen",
@@ -860,7 +860,7 @@ const data = [
         {
             "Skin type": "Normal",
             "Concern": "Reduce Redness & Sensitivity",
-            "Commitment Level": "Intensive",
+            "Commitment Level": "Comprehensive",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
             "Essential Ingredients to Look For": "Centella Asiatica (Cica), Colloidal Oatmeal, Aloe Vera (99% pure), Chamomile Extract, Green Tea Extract, Panthenol, Allantoin, Bisabolol, Calendula, Cucumber Extract, Anti-inflammatory peptides",
             "Product Suggestion AM": "Facewash, Toner (hydrating/exfoliating), Essence, Antioxidant serum (Vitamin C), Moisturizer, Sunscreen",
@@ -871,7 +871,7 @@ const data = [
         {
             "Skin type": "Normal",
             "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
-            "Commitment Level": "Intensive",
+            "Commitment Level": "Comprehensive",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
             "Essential Ingredients to Look For": "Retinol/Retinoids, Peptides, Vitamin C, Hyaluronic Acid, Niacinamide, Coenzyme Q10, Bakuchiol, AHAs, Antioxidants",
             "Product Suggestion AM": "Facewash, Toner (hydrating/exfoliating), Essence, Antioxidant serum (Vitamin C), Moisturizer, Sunscreen",
@@ -882,7 +882,7 @@ const data = [
         {
             "Skin type": "Normal",
             "Concern": "Improve Skin Firmness & Elasticity",
-            "Commitment Level": "Intensive",
+            "Commitment Level": "Comprehensive",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly + Natural/Organic Products",
             "Essential Ingredients to Look For": "Peptides, Collagen, Elastin, Retinol, DMAE, Vitamin C, Hydrolyzed Protein, Amino Acids, Hyaluronic Acid",
             "Product Suggestion AM": "Facewash, Toner (hydrating/exfoliating), Essence, Antioxidant serum (Vitamin C), Moisturizer, Sunscreen",
@@ -1190,7 +1190,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Clear Acne & Breakouts",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Salicylic Acid (0.5-1% - lower concentration)• Niacinamide (5%)• Tea Tree Oil (diluted)• Azelaic Acid• Gentle Clay (Kaolin)• Zinc Oxide• Honey (antibacterial + moisturizing)• Ceramides (to maintain barrier)• Hyaluronic Acid (hydrating treatment)",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1201,7 +1201,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Reduce Oiliness & Shine",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Niacinamide (5-10%)• Light Clay (Kaolin only)• Green Tea Extract• Hyaluronic Acid• Gentle Mattifying agents• Oil-balancing botanicals• Lightweight moisturizers• Zinc PCA (minimal use)• Spot-treatment only approach",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1212,7 +1212,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Hydrate Dry Skin",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Hyaluronic Acid (multiple molecular weights)• Glycerin• Ceramides• Squalane• Shea Butter• Rosehip Oil• Jojoba Oil• Panthenol• Honey• Aloe Vera• Urea (5-10%)• Petrolatum/Vaseline",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1223,7 +1223,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Minimize Pores & Blackheads",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Gentle AHAs (Lactic Acid 5%)• Low-concentration Salicylic Acid (0.5%)• Niacinamide (5%)• Gentle Clay masks (weekly)• Oil cleansing method• Hyaluronic Acid• Ceramides• Gentle exfoliating enzymes• Moisturizing pore treatments",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1234,7 +1234,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Vitamin C (5-10% - gentler concentration)• Alpha Arbutin• Kojic Acid• Tranexamic Acid• Niacinamide• Gentle AHAs (Lactic Acid)• Licorice Root Extract• Azelaic Acid• Moisturizing brightening serums",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1245,7 +1245,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Reduce Redness & Sensitivity",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Centella Asiatica (Cica)• Aloe Vera• Colloidal Oatmeal• Ceramides• Shea Butter• Panthenol• Allantoin• Bisabolol• Chamomile Extract• Rich, barrier-repairing ingredients",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1256,7 +1256,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Retinol (0.25% - start low)• Bakuchiol (gentle retinol alternative)• Peptides• Vitamin C (5-10%)• Hyaluronic Acid• Niacinamide• Rich moisturizing anti-aging creams• Coenzyme Q10• Antioxidant oils",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1267,7 +1267,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Improve Skin Firmness & Elasticity",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Peptides (Matrixyl, Argireline)• Collagen• Elastin• Retinol (low concentration)• Vitamin C• Rich moisturizing treatments• Amino Acids• DMAE• Nourishing oils• Hyaluronic Acid",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1278,7 +1278,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Achieve a Natural Glow",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Vitamin C (5-10%)• Gentle AHAs (Lactic Acid)• Niacinamide• Hyaluronic Acid• Nourishing oils (Rosehip, Argan)• Honey• Antioxidants• Rich, illuminating moisturizers• Glow-enhancing oils",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1289,7 +1289,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Clear Acne & Breakouts",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly",
             "Essential Ingredients to Look For": "• Salicylic Acid (0.5-1% - lower concentration)• Niacinamide (5%)• Tea Tree Oil (diluted)• Azelaic Acid• Gentle Clay (Kaolin)• Zinc Oxide• Honey (antibacterial + moisturizing)• Ceramides (to maintain barrier)• Hyaluronic Acid (hydrating treatment)",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1300,7 +1300,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Reduce Oiliness & Shine",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly",
             "Essential Ingredients to Look For": "• Niacinamide (5-10%)• Light Clay (Kaolin only)• Green Tea Extract• Hyaluronic Acid• Gentle Mattifying agents• Oil-balancing botanicals• Lightweight moisturizers• Zinc PCA (minimal use)• Spot-treatment only approach",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1311,7 +1311,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Hydrate Dry Skin",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly",
             "Essential Ingredients to Look For": "• Hyaluronic Acid (multiple molecular weights)• Glycerin• Ceramides• Squalane• Shea Butter• Rosehip Oil• Jojoba Oil• Panthenol• Honey• Aloe Vera• Urea (5-10%)• Petrolatum/Vaseline",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1322,7 +1322,7 @@ const data = [
         {
             "Skin type": "Dry",
             "Concern": "Minimize Pores & Blackheads",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly",
             "Essential Ingredients to Look For": "• Gentle AHAs (Lactic Acid 5%)• Low-concentration Salicylic Acid (0.5%)• Niacinamide (5%)• Gentle Clay masks (weekly)• Oil cleansing method• Hyaluronic Acid• Ceramides• Gentle exfoliating enzymes• Moisturizing pore treatments",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -1630,7 +1630,7 @@ const data = [
         {
             "Skin type": "Sensitive",
             "Concern": "Clear Acne & Breakouts",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Azelaic Acid (5-10% - gentle anti-acne)• Niacinamide (2-5% - lower concentration)• Tea Tree Oil (0.5-1% - highly diluted)• Zinc Oxide• Sulfur (gentle formulations)• Centella Asiatica (anti-inflammatory)• Honey (antibacterial + soothing)• Gentle Clay (Kaolin - infrequent use)• Prebiotics/Probiotics (microbiome support)",
             "Product Suggestion AM": "Facewash\nAntioxidant serum (like Vitamin C)\nMoisturizer\nSunscreen",
@@ -1641,7 +1641,7 @@ const data = [
         {
             "Skin type": "Sensitive",
             "Concern": "Reduce Oiliness & Shine",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Niacinamide (2-5% - gentle oil control)• Green Tea Extract• Gentle Clay (Kaolin - weekly max)• Zinc PCA (low concentration)• Rice Powder (gentle oil absorption)• Willow Bark Extract (natural BHA alternative)• Hyaluronic Acid (oil-free hydration)• Gentle mattifying botanicals• pH-balanced formulations",
             "Product Suggestion AM": "Facewash\nAntioxidant serum (like Vitamin C)\nMoisturizer\nSunscreen",
@@ -1652,7 +1652,7 @@ const data = [
         {
             "Skin type": "Sensitive",
             "Concern": "Hydrate Dry Skin",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Hyaluronic Acid (fragrance-free)• Glycerin• Ceramides• Squalane• Colloidal Oatmeal• Shea Butter (pure, unrefined)• Aloe Vera (99% pure)• Panthenol• Allantoin• Petrolatum/Vaseline• Gentle plant oils (Sunflower, Safflower)",
             "Product Suggestion AM": "Facewash\nAntioxidant serum (like Vitamin C)\nMoisturizer\nSunscreen",
@@ -1663,7 +1663,7 @@ const data = [
         {
             "Skin type": "Sensitive",
             "Concern": "Minimize Pores & Blackheads",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Gentle Oil Cleansing (Sunflower/Safflower oil)• Lactic Acid (2-5% - gentlest AHA)• Niacinamide (2-5%)• Enzyme exfoliants (Papaya, Pumpkin)• Clay masks (Kaolin - monthly only)• Gentle steam treatments• Hyaluronic Acid• Pore-supporting peptides• Gentle mechanical removal",
             "Product Suggestion AM": "Facewash\nAntioxidant serum (like Vitamin C)\nMoisturizer\nSunscreen",
@@ -1674,7 +1674,7 @@ const data = [
         {
             "Skin type": "Sensitive",
             "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Vitamin C (5-10% - stable forms like Magnesium Ascorbyl Phosphate)• Alpha Arbutin (1-2%)• Tranexamic Acid (2-5%)• Kojic Acid (1-2%)• Niacinamide (2-5%)• Licorice Root Extract• Gentle Lactic Acid (2-5%)• Azelaic Acid (5-10%)• Brightening botanicals",
             "Product Suggestion AM": "Facewash\nAntioxidant serum (like Vitamin C)\nMoisturizer\nSunscreen",
@@ -1685,7 +1685,7 @@ const data = [
         {
             "Skin type": "Sensitive",
             "Concern": "Reduce Redness & Sensitivity",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Centella Asiatica (Cica)• Colloidal Oatmeal• Aloe Vera (99% pure)• Chamomile Extract• Green Tea Extract• Panthenol• Allantoin• Bisabolol• Calendula• Cucumber Extract• Anti-inflammatory peptides",
             "Product Suggestion AM": "Facewash\nAntioxidant serum (like Vitamin C)\nMoisturizer\nSunscreen",
@@ -1696,7 +1696,7 @@ const data = [
         {
             "Skin type": "Sensitive",
             "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Bakuchiol (gentle retinol alternative)• Gentle Peptides• Vitamin C (5% - stable forms)• Niacinamide (2-5%)• Hyaluronic Acid• Gentle antioxidants• Coenzyme Q10• Gentle plant extracts• Moisturizing anti-aging treatments• Retinyl Palmitate (gentler than retinol)",
             "Product Suggestion AM": "Facewash\nAntioxidant serum (like Vitamin C)\nMoisturizer\nSunscreen",
@@ -1707,7 +1707,7 @@ const data = [
         {
             "Skin type": "Sensitive",
             "Concern": "Improve Skin Firmness & Elasticity",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Gentle Peptides (Matrixyl)• Bakuchiol• Vitamin C (5-10% gentle forms)• Hyaluronic Acid• Amino Acids• Gentle firming botanicals• Collagen-supporting ingredients• DMAE (low concentration)• Nourishing, supportive treatments",
             "Product Suggestion AM": "Facewash\nAntioxidant serum (like Vitamin C)\nMoisturizer\nSunscreen",
@@ -1718,7 +1718,7 @@ const data = [
         {
             "Skin type": "Sensitive",
             "Concern": "Achieve a Natural Glow",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "• Vitamin C (5-10% gentle forms)• Gentle Lactic Acid (2-5%)• Niacinamide (2-5%)• Hyaluronic Acid• Gentle illuminating botanicals• Rice Bran Extract• Honey• Gentle antioxidants• Moisturizing glow enhancers",
             "Product Suggestion AM": "Facewash\nAntioxidant serum (like Vitamin C)\nMoisturizer\nSunscreen",
@@ -2026,7 +2026,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Clear Acne & Breakouts",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "Salicylic Acid (1-2% - T-zone focus), Niacinamide (5-10% - all over), Tea Tree Oil (spot treatment), Benzoyl Peroxide (2.5% - T-zone only), Azelaic Acid (gentle, all over), Clay (Kaolin - T-zone masks), Zinc Oxide, Hyaluronic Acid (dry areas), Ceramides (barrier support)",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2037,7 +2037,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Reduce Oiliness & Shine",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "Niacinamide (10% - T-zone focus), Salicylic Acid (1-2% - oily areas), Clay (Kaolin/Fuller's Earth - T-zone), Green Tea Extract, Witch Hazel (T-zone only), Zinc PCA (oily areas), Oil-absorbing powders, Lightweight moisturizers, Mattifying primers",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2048,7 +2048,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Hydrate Dry Skin",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "Hyaluronic Acid (multiple weights), Glycerin, Ceramides, Squalane, Lightweight oils (Jojoba, Rosehip), Panthenol, Aloe Vera, Honey, Urea (5% - dry areas only), Barrier-repairing ingredients",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2059,7 +2059,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Minimize Pores & Blackheads",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "Salicylic Acid (1-2% - T-zone), Niacinamide (10% - all over), Gentle AHAs (Lactic Acid 5%), Retinol (0.25-0.5% - start T-zone), Clay masks (T-zone only), Oil cleansing (gentle, all over), Pore-refining peptides, Hyaluronic Acid (hydration balance)",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2070,7 +2070,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Even Out Skin Tone & Reduce Dark Spots",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "Vitamin C (10-15% - all over), Alpha Arbutin, Tranexamic Acid, Kojic Acid, Niacinamide (10%), Gentle AHAs (Lactic/Mandelic Acid), Licorice Root Extract, Azelaic Acid, Brightening peptides",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2081,7 +2081,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Reduce Redness & Sensitivity",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "Centella Asiatica (Cica), Niacinamide (5%), Green Tea Extract, Aloe Vera, Colloidal Oatmeal, Panthenol, Allantoin, Bisabolol, Chamomile Extract, Gentle, pH-balanced formulas",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2092,7 +2092,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Anti-Aging: Reduce Wrinkles & Fine Lines",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "Retinol (0.25-0.5% - start gradually), Bakuchiol (gentle alternative), Peptides (all over), Vitamin C (10-15%), Niacinamide, Hyaluronic Acid, Gentle AHAs, Antioxidants, Balanced moisturizing treatments",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2103,7 +2103,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Improve Skin Firmness & Elasticity",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "Peptides (Matrixyl, Argireline), Vitamin C, Retinol (gradual introduction), Hyaluronic Acid, DMAE, Amino Acids, Collagen-boosting ingredients, Balanced hydration support, Firming botanicals",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2114,7 +2114,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Achieve a Natural Glow",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Natural/Organic Products",
             "Essential Ingredients to Look For": "Vitamin C (10-15%), Gentle AHAs (Lactic Acid), Niacinamide, Hyaluronic Acid, Light oils (Rosehip, Squalane), Antioxidants, Illuminating peptides, Balanced glow enhancers, Multi-zone treatment approach",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2125,7 +2125,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Clear Acne & Breakouts",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly",
             "Essential Ingredients to Look For": "Salicylic Acid (1-2% - T-zone focus), Niacinamide (5-10% - all over), Tea Tree Oil (spot treatment), Benzoyl Peroxide (2.5% - T-zone only), Azelaic Acid (gentle, all over), Clay (Kaolin - T-zone masks), Zinc Oxide, Hyaluronic Acid (dry areas), Ceramides (barrier support)",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2136,7 +2136,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Reduce Oiliness & Shine",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly",
             "Essential Ingredients to Look For": "Niacinamide (10% - T-zone focus), Salicylic Acid (1-2% - oily areas), Clay (Kaolin/Fuller's Earth - T-zone), Green Tea Extract, Witch Hazel (T-zone only), Zinc PCA (oily areas), Oil-absorbing powders, Lightweight moisturizers, Mattifying primers",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",
@@ -2147,7 +2147,7 @@ const data = [
         {
             "Skin type": "Combination",
             "Concern": "Hydrate Dry Skin",
-            "Commitment Level": "Moderate",
+            "Commitment Level": "Standard",
             "Preferred Skincare Ingredients/Products": "Budget-Friendly",
             "Essential Ingredients to Look For": "Hyaluronic Acid (multiple weights), Glycerin, Ceramides, Squalane, Lightweight oils (Jojoba, Rosehip), Panthenol, Aloe Vera, Honey, Urea (5% - dry areas only), Barrier-repairing ingredients",
             "Product Suggestion AM": "Facewash, Antioxidant serum (like Vitamin C), Moisturizer, Sunscreen",

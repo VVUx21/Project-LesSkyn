@@ -204,7 +204,7 @@ function SkincarePollingResults({
 
   const handleRetakeQuiz = useCallback(() => {
     cleanup();
-    router.push('/quiz');
+    router.push('/onboarding');
   }, [cleanup, router]);
 
   // Init on mount - only start polling when we have resolved params

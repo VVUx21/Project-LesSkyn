@@ -70,11 +70,11 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
       case "A simple, no-fuss routine with just the essentials 3-4 steps":
         return "Minimal";
       case "A balanced routine with targeted treatments 5-6 steps":
-        return "Moderate";
+        return "Standard";
       case "A complete routine for maximum results 7+ steps":
-        return "Extensive";
+        return "Comprehensive";
       default:
-        return "Moderate";
+        return "Standard";
     }
   };
 
