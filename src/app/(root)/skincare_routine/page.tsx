@@ -1,4 +1,5 @@
 "use client"
+export const dynamic = "force-dynamic";
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter} from 'next/navigation';
 import { RoutineStep,WeeklyTreatment,SkincareData, UserPreferences,GetRoutineResponse } from '@/lib/types';
@@ -12,7 +13,6 @@ enum LoadingState {
   TIMEOUT = 'timeout'
 }
 
-// Update the interface to match Next.js expectations
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }

@@ -6,8 +6,9 @@ import { SkincareRoutineRequest,SkincareRoutineResponse } from "@/lib/types"
 import { MultiStepLoader } from '@/components/ui/multi-step-loader';
 import Image from "next/image"
 import { useCallback, useState } from "react"
+import { useRouter } from "next/navigation"
 import React from "react"
-
+// No additional routing setup needed here since useRouter from "next/navigation" is already imported and used for client-side navigation.
 interface SummaryStepProps {
   onComplete: () => void
 }
@@ -23,6 +24,7 @@ const loadingStates = [
 ];
 
 export default function SummaryStep({ onComplete }: SummaryStepProps) {
+  const router = useRouter();
   const { userProfile, updateUserProfile } = useSkinCare();
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -292,15 +294,18 @@ const handleGenerateRoutine = useCallback(async (useStreaming: boolean = true) =
       skinType: mapSkinTypeToAPI(userProfile.skinType),
       skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
     });
+    
     setIsGenerating(false);
-    window.location.href = `/skincare_routine?${queryParams.toString()}`;
+    
+    // Use Next.js router instead of window.location
+    router.push(`/skincare_routine?${queryParams.toString()}`);
     
   } catch (err: any) {
     setError(err.message || 'Failed to generate skincare routine');
     console.error('❌ Final error:', err);
     setIsGenerating(false);
   }
-}, [generateSkincareRoutine, userProfile]);
+}, [generateSkincareRoutine, userProfile, router]);
 
 const handleRetry = useCallback(() => {
   handleGenerateRoutine(false); // Use regular mode for retry
