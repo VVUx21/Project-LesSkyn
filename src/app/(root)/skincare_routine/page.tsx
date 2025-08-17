@@ -1,5 +1,4 @@
 "use client"
-export const dynamic = "force-dynamic";
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter} from 'next/navigation';
 import { RoutineStep,WeeklyTreatment,SkincareData, UserPreferences,GetRoutineResponse } from '@/lib/types';
