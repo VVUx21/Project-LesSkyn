@@ -1,6 +1,6 @@
 "use client"
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter} from 'next/navigation';
 import { RoutineStep,WeeklyTreatment,SkincareData, UserPreferences,GetRoutineResponse } from '@/lib/types';
 import { ChevronRight, Download, Home, RotateCcw, AlertTriangle, RefreshCw } from 'lucide-react';
 import Navbar from '@/components/Navbar';
@@ -12,10 +12,16 @@ enum LoadingState {
   TIMEOUT = 'timeout'
 }
 
-const SkincarePollingResults: React.FC = () => {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+// Update the interface to match Next.js expectations
+interface PageProps {
+  searchParams: Promise<{ [key: string]: string | undefined }>;
+}
 
+function SkincarePollingResults({
+  searchParams,
+}: PageProps) {
+  const router = useRouter();
+  const [resolvedSearchParams, setResolvedSearchParams] = useState<{ [key: string]: string | undefined } | null>(null);
   const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.POLLING);
   const [skincareData, setSkincareData] = useState<SkincareData | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,6 +42,22 @@ const SkincarePollingResults: React.FC = () => {
   const MAX_POLLING_ATTEMPTS = 40; // ~5 minutes total
   const TIMEOUT_DURATION = 300000; // 5 minutes
 
+  // Resolve searchParams promise
+  useEffect(() => {
+    const resolveParams = async () => {
+      try {
+        const params = await searchParams;
+        setResolvedSearchParams(params);
+      } catch (error) {
+        console.error('Error resolving search params:', error);
+        setError('Failed to load search parameters.');
+        setLoadingState(LoadingState.ERROR);
+      }
+    };
+
+    resolveParams();
+  }, [searchParams]);
+
   // Keep ref in sync with state
   useEffect(() => {
     loadingStateRef.current = loadingState;
@@ -43,14 +65,15 @@ const SkincarePollingResults: React.FC = () => {
 
   const userPreferences: UserPreferences | null = useMemo(() => {
     try {
-      const skinType = searchParams.get('skinType');
-      const skinConcern = searchParams.get('skinConcern');
-      if (!skinType || !skinConcern) return null;
-      return { skinType: skinType.trim(), skinConcern: skinConcern.trim() };
+      if (!resolvedSearchParams?.skinType || !resolvedSearchParams?.skinConcern) return null;
+      return { 
+        skinType: resolvedSearchParams.skinType.trim(), 
+        skinConcern: resolvedSearchParams.skinConcern.trim() 
+      };
     } catch {
       return null;
     }
-  }, [searchParams]);
+  }, [resolvedSearchParams]);
 
   const cleanup = useCallback(() => {
     isPollingActiveRef.current = false;
@@ -185,8 +208,10 @@ const SkincarePollingResults: React.FC = () => {
     router.push('/quiz');
   }, [cleanup, router]);
 
-  // Init on mount
+  // Init on mount - only start polling when we have resolved params
   useEffect(() => {
+    if (!resolvedSearchParams) return; // Wait for params to resolve
+
     if (!userPreferences) {
       setError('Invalid preferences. Please retake the quiz.');
       setLoadingState(LoadingState.ERROR);
@@ -197,7 +222,7 @@ const SkincarePollingResults: React.FC = () => {
       clearTimeout(initTimer);
       cleanup();
     };
-  }, [userPreferences, startPolling, cleanup]);
+  }, [resolvedSearchParams, userPreferences, startPolling, cleanup]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -221,6 +246,29 @@ const SkincarePollingResults: React.FC = () => {
       ]
     };
   }, [skincareData]);
+
+  // Show initial loading while resolving params
+  if (!resolvedSearchParams) {
+    return (
+      <div className="bg-gradient-to-br from-[#7772E7] via-[#9A68EB] to-[#D881F5F5] min-h-screen p-4 sm:p-6">
+        <div className="flex items-center justify-center p-4 mb-16">
+          <Navbar />
+        </div>
+        
+        <div className="max-w-4xl mx-auto flex items-center justify-center min-h-[400px]">
+          <div className="bg-white/25 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/30 text-center">
+            <div className="flex items-center justify-center mb-6">
+              <RefreshCw className="w-12 h-12 text-white animate-spin" />
+            </div>
+            
+            <h2 className="text-2xl font-bold text-white mb-4">
+              Loading...
+            </h2>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // Polling status indicator
   const PollingIndicator = () => {
@@ -460,7 +508,7 @@ const SkincarePollingResults: React.FC = () => {
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <h3 className="text-xl font-bold text-green-300 mb-6 flex items-center gap-3">
-                <span className="text-2xl">✅</span> Do's
+                <span className="text-2xl">✅</span> Do&apos;s
               </h3>
               <ul className="space-y-4">
                 {doTips.map((tip, index) => (
@@ -474,7 +522,7 @@ const SkincarePollingResults: React.FC = () => {
             
             <div>
               <h3 className="text-xl font-bold text-red-300 mb-6 flex items-center gap-3">
-                <span className="text-2xl">❌</span> Don'ts
+                <span className="text-2xl">❌</span> Don&apos;ts
               </h3>
               <ul className="space-y-4">
                 {dontTips.map((tip, index) => (
