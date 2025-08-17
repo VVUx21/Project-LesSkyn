@@ -134,7 +134,7 @@ const Authform = ({type}:{type:string}) => {
             <Button 
               type='submit' 
               disabled={isLoading} 
-              className="w-full bg-[#211D39] disabled:bg-[#211D39]/20 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
+              className="w-full cursor-pointer bg-[#211D39] disabled:bg-[#211D39]/20 text-white font-semibold py-3 px-4 rounded-lg transition-colors duration-200 flex items-center justify-center"
             >
               {isLoading ? (
                 <>

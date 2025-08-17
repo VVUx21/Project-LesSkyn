@@ -2,6 +2,8 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { z } from "zod";
 import data from "./data";
+import { createAdminClient } from '@/lib/server/appwrite'; // Add your Appwrite config import
+import { ID } from 'node-appwrite';
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -132,4 +134,35 @@ export function extractKeyIngredients(profile: any): string[] {
     .split('•')
     .map((ingredient: string) => ingredient.trim())
     .filter((ingredient: string) => ingredient.length > 0);
+}
+const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
+const COLLECTION_ID = process.env.APPWRITE_USERPROFILE_COLLECTION_ID!; // Your routines collection ID
+// Function to save routine to Appwrite
+export async function saveRoutineToDatabase(
+  skinType: string,
+  skinConcern: string,
+  routineType: string,
+  generatedRoutine: string
+) {
+  try {
+    const { database } = await createAdminClient();
+    const document = await database.createDocument(
+      DATABASE_ID!,
+      COLLECTION_ID!,
+      ID.unique(),
+      {
+        skinType,
+        skinConcern,
+        routineType,
+        generatedRoutine,
+        createdAt: new Date().toISOString()
+      }
+    );
+    
+    console.log('✅ Routine saved to database:', document.$id);
+    return document;
+  } catch (error) {
+    console.error('❌ Failed to save routine to database:', error);
+    throw error;
+  }
 }

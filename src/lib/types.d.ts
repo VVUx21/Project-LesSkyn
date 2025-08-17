@@ -94,3 +94,41 @@ export interface SkincareRoutineResponse {
   };
   processingTime?: number;
 }
+
+// Types
+export interface RoutineStep {
+  step: number;
+  product_name: string;
+  product_url: string;
+  why_chosen: string;
+  how_to_use: string;
+}
+
+export interface WeeklyTreatment {
+  treatment_type: string;
+  product_name: string;
+  product_url: string;
+  why_chosen: string;
+  how_to_use: string;
+}
+
+export interface SkincareData {
+  routine: {
+    morning: RoutineStep[];
+    evening: RoutineStep[];
+  };
+  weekly_treatments: WeeklyTreatment[];
+  general_notes_and_tips: string[];
+}
+
+export interface UserPreferences {
+  skinType: string;
+  skinConcern: string;
+}
+
+export interface GetRoutineResponse {
+  success: boolean;
+  data?: SkincareData;
+  error?: string;
+  message?: string;
+}

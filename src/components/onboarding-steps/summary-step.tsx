@@ -3,6 +3,7 @@ import { useSkinCare } from "@/context/skin-care-context"
 import { Button } from "@/components/ui/button"
 import { Check, Loader2, AlertCircle, RefreshCw } from "lucide-react"
 import { SkincareRoutineRequest,SkincareRoutineResponse } from "@/lib/types"
+import { MultiStepLoader } from '@/components/ui/multi-step-loader';
 import Image from "next/image"
 import { useCallback, useState } from "react"
 import React from "react"
@@ -10,6 +11,16 @@ import React from "react"
 interface SummaryStepProps {
   onComplete: () => void
 }
+const loadingStates = [
+  { text: "Searching for your personalized routine..." },
+  { text: "AI is still crafting your perfect skincare plan..." },
+  { text: "Analyzing thousands of product combinations..." },
+  { text: "Fine-tuning morning and evening routines..." },
+  { text: "Adding finishing touches to your regimen..." },
+  { text: "Almost ready - finalizing recommendations..." },
+  { text: "Your routine is being saved securely..." },
+  { text: "Just a few more seconds - perfecting details..." }
+];
 
 export default function SummaryStep({ onComplete }: SummaryStepProps) {
   const { userProfile, updateUserProfile } = useSkinCare();
@@ -18,7 +29,6 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
   const [retryCount, setRetryCount] = useState(0);
   const [processingTime, setProcessingTime] = useState<number | null>(null);
 
-  // Map user profile values to API expected values
   const mapSkinTypeToAPI = (skinType: string): string => {
     switch (skinType) {
       case "Oily T-zone (forehead, nose, chin) but dry cheeks":
@@ -39,17 +49,17 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
   const mapSkinConcernToAPI = (skinConcern: string): string => {
     switch (skinConcern) {
       case "Pimples, blackheads, whiteheads, and clogged pores":
-        return "Acne";
+        return "Clear Acne & Breakouts";
       case "Fine lines, wrinkles, loss of firmness and elasticity":
         return "Anti-aging";
       case "Lack of radiance, rough texture, uneven skin tone":
-        return "Brightening";
+        return "Achieve a Natural Glow";
       case "Sun spots, post-acne marks, melasma, uneven skin tone":
-        return "Brightening";
+        return "Even Out Skin Tone & Reduce Dark Spots";
       case "Irritation, redness, reactivity to products":
-        return "Hydration";
+        return "Reduce Redness & Sensitivity";
       default:
-        return "Hydration";
+        return "Not specified";
     }
   };
 
@@ -66,21 +76,21 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
     }
   };
 
-  // Determine preferred products based on routine type and concern
-  const determinePreferredProducts = (routineType: string, skinConcern: string): string => {
-    if (routineType === "A complete routine for maximum results 7+ steps") {
-      return "Premium";
-    } else if (routineType === "A simple, no-fuss routine with just the essentials 3-4 steps") {
-      return "Natural/Organic Products";
-    } else if (skinConcern.includes("Irritation") || skinConcern.includes("Sensitive")) {
-      return "Dermatologist Recommended";
-    }
-    return "Natural/Organic";
-  };
+  const determinePreferredProducts = (routineType:string) => {
+  if (routineType === "A simple, no-fuss routine with just the essentials 3-4 steps") {
+    return "Natural/Organic Products";
+  } 
+  else if (routineType === "A complete routine for maximum results 7+ steps") {
+    return "Budget-Friendly + Natural/Organic Products";
+  } 
+  else {
+    return "Natural/Organic Products";
+  }
+};
 
   // Get relevant product categories based on skin concern
   const getRelevantCategories = (skinConcern: string): string[] => {
-    const baseCategories = ["cleansers", "moisturizers", "serum"];
+    const baseCategories = ["cleansers", "moisturizers", "serum","facewash"];
     
     switch (skinConcern) {
       case "Pimples, blackheads, whiteheads, and clogged pores":
@@ -110,7 +120,7 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
       skinType: mapSkinTypeToAPI(userProfile.skinType),
       skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
       commitmentLevel: mapRoutineTypeToAPI(userProfile.routineType),
-      preferredProducts: determinePreferredProducts(userProfile.routineType, userProfile.skinConcern),
+      preferredProducts: determinePreferredProducts(userProfile.routineType),
       limit: 150,
       categories: getRelevantCategories(userProfile.skinConcern),
       priceRange: {
@@ -277,14 +287,20 @@ const handleGenerateRoutine = useCallback(async (useStreaming: boolean = true) =
 
   try {
     await generateSkincareRoutine(useStreaming);
-    onComplete();
+
+    const queryParams = new URLSearchParams({
+      skinType: mapSkinTypeToAPI(userProfile.skinType),
+      skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
+    });
+    setIsGenerating(false);
+    window.location.href = `/skincare_routine?${queryParams.toString()}`;
+    
   } catch (err: any) {
     setError(err.message || 'Failed to generate skincare routine');
     console.error('❌ Final error:', err);
-  } finally {
     setIsGenerating(false);
   }
-}, [generateSkincareRoutine, onComplete]);
+}, [generateSkincareRoutine, userProfile]);
 
 const handleRetry = useCallback(() => {
   handleGenerateRoutine(false); // Use regular mode for retry
@@ -309,21 +325,21 @@ const handleRetry = useCallback(() => {
   }
 
   const getSkinConcernLabel = () => {
-    switch (userProfile.skinConcern) {
-      case "Pimples, blackheads, whiteheads, and clogged pores":
-        return "Acne & Breakouts"
-      case "Fine lines, wrinkles, loss of firmness and elasticity":
-        return "Signs of Aging"
-      case "Lack of radiance, rough texture, uneven skin tone":
-        return "Dullness & Uneven Texture"
-      case "Sun spots, post-acne marks, melasma, uneven skin tone":
-        return "Dark Spots & Hyperpigmentation"
-      case "Irritation, redness, reactivity to products":
-        return "Redness & Sensitivity"
-      default:
-        return "Not specified"
-    }
+  switch (userProfile.skinConcern) {
+    case "Pimples, blackheads, whiteheads, and clogged pores":
+      return "Clear Acne & Breakouts";
+    case "Fine lines, wrinkles, loss of firmness and elasticity":
+      return "Anti-aging";
+    case "Lack of radiance, rough texture, uneven skin tone":
+      return "Achieve a Natural Glow";
+    case "Sun spots, post-acne marks, melasma, uneven skin tone":
+      return "Even Out Skin Tone & Reduce Dark Spots";
+    case "Irritation, redness, reactivity to products":
+      return "Reduce Redness & Sensitivity";
+    default:
+      return "Not specified";
   }
+};
 
   const getRoutineTypeLabel = () => {
     switch (userProfile.routineType) {
@@ -340,6 +356,14 @@ const handleRetry = useCallback(() => {
 
   return (
     <div className="space-y-6">
+      {isGenerating && (
+        <MultiStepLoader
+          loadingStates={loadingStates}
+          loading={true}
+          duration={2000}
+          loop={false}
+        />
+      )}
       <div className="rounded-lg border p-6">
         <h3 className="mb-4 text-lg font-medium">Your Skin Profile</h3>
         <div className="space-y-4">
@@ -443,7 +467,7 @@ const handleRetry = useCallback(() => {
         </Button>
         <Button 
           className="bg-[#211D39] text-amber-50 min-w-[140px]"
-          onClick={() => handleGenerateRoutine(true)} // Explicitly enable streaming
+          onClick={() => handleGenerateRoutine(true)}
           disabled={isGenerating}
         >
           {isGenerating ? (

@@ -29,20 +29,19 @@ export const getUserInfo = async ({ userId }: getUserInfoProps) => { //it querie
   }
 }
 
-export async function getLoggedInUser() {
-  try {
-    const { account } = await createSessionClient();//we will also get the user from
-    //session and then fetch the user details from database.
-    const result = await account.get();
+export const getLoggedInUser = async () => {
+    try {
+      const { account } = await createSessionClient();
 
-    const user = await getUserInfo({ userId: result.$id})
+      const result = await account.get();
+      const user = await getUserInfo({ userId: result.$id })
+      return parseStringify(user);
 
-    return parseStringify(user);
-  } catch (error) {
-    console.log(error);
-    return null;
-  }
-}
+    } catch (error) {
+      console.error("Failed to retrieve logged-in user:", error);
+      return null;
+    }
+  };
 
   export const logoutAccount = async () => {
     try {

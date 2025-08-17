@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchAllProductsOptimized } from '@/lib/server/products.actions'; 
 import generateSkincareRoutine, { generateSkincareRoutineStream } from '@/lib/server/gemini.action'; 
-import { ProductData,GenerateRoutineRequest } from "../../../lib/types"; 
+import { ProductData, GenerateRoutineRequest } from "../../../lib/types";
+import { saveRoutineToDatabase } from '@/lib/utils';
 
 let productsCache: {
   data: ProductData[];
@@ -9,7 +10,7 @@ let productsCache: {
   ttl: number;
 } | null = null;
 
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes cache
+const CACHE_TTL = 5 * 60 * 1000; 
 
 async function getCachedProducts(limit: number = 200): Promise<ProductData[]> {
   const now = Date.now();
@@ -24,7 +25,6 @@ async function getCachedProducts(limit: number = 200): Promise<ProductData[]> {
     throw new Error(response.error || 'Failed to fetch products');
   }
 
-  // Update cache
   productsCache = {
     data: response.products ?? [],
     timestamp: now,
@@ -36,7 +36,7 @@ async function getCachedProducts(limit: number = 200): Promise<ProductData[]> {
 
 function validateRequest(body: any): { isValid: boolean; errors: string[] } {
   const errors: string[] = [];
-  const required = ['skinType', 'skinConcern', 'commitmentLevel', 'preferredProducts'];
+  const required = ['skinType', 'skinConcern', 'commitmentLevel', 'preferredProducts']; 
   
   for (const field of required) {
     if (!body[field] || typeof body[field] !== 'string' || body[field].trim() === '') {
@@ -50,15 +50,13 @@ function validateRequest(body: any): { isValid: boolean; errors: string[] } {
   };
 }
 
-// New streaming endpoint
 export async function POST(request: NextRequest) {
   const startTime = Date.now();
   const url = new URL(request.url);
   const streaming = url.searchParams.get('stream') === 'true';
   
   try {
-    // Parse request body
-    let body: GenerateRoutineRequest;
+    let body: GenerateRoutineRequest
     try {
       body = await request.json();
     } catch (error) {
@@ -72,7 +70,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Validate request
     const validation = validateRequest(body);
     if (!validation.isValid) {
       return NextResponse.json(
@@ -94,7 +91,6 @@ export async function POST(request: NextRequest) {
       limit = 200,
     } = body;
 
-    // Fetch products (with caching)
     console.log('🔄 Fetching products...');
     const allProducts = await getCachedProducts(limit);
     
@@ -113,10 +109,10 @@ export async function POST(request: NextRequest) {
     if (streaming) {
       console.log('🌊 Starting streaming routine generation...');
       
-      // Create a ReadableStream for Server-Sent Events
       const stream = new ReadableStream({
         async start(controller) {
           const encoder = new TextEncoder();
+          let completeRoutineData: any = null;
           
           try {
             // Send initial metadata
@@ -130,7 +126,7 @@ export async function POST(request: NextRequest) {
               }
             };
             
-            console.log('🚀 STREAMING START:', metadata); // ADD THIS
+            console.log('🚀 STREAMING START:', metadata);
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(metadata)}\n\n`));
 
             // Stream the routine generation
@@ -145,37 +141,80 @@ export async function POST(request: NextRequest) {
             for await (const chunk of routineStream) {
               const data = JSON.parse(chunk);
               
-              console.log('📦 STREAMING CHUNK:', data.type, data); // ADD THIS
+              console.log('📦 STREAMING CHUNK:', data.type, data);
               
               // Forward the chunk to client
               controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
               
-              // If complete or error, close the stream
-              if (data.type === 'complete' || data.type === 'error') {
-                const processingTime = Date.now() - startTime;
-                console.log('✅ STREAMING COMPLETE:', { processingTime, type: data.type }); // ADD THIS
+              // If complete, save to database
+              if (data.type === 'complete') {
+                completeRoutineData = data.data;
                 
-                const finalMessage = {
-                  type: 'metadata',
-                  data: { processingTime, completed: true }
-                };
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalMessage)}\n\n`));
+                try {
+                  await saveRoutineToDatabase(
+                    skinType,
+                    skinConcern,
+                    commitmentLevel,
+                    JSON.stringify(completeRoutineData) // Store as JSON string
+                  );
+                  
+                  // Send success confirmation to client
+                  const saveConfirmation = {
+                    type: 'database_saved',
+                    message: 'Routine successfully saved to database'
+                  };
+                  //controller.enqueue(encoder.encode(`data: ${JSON.stringify(saveConfirmation)}\n\n`));
+                  
+                } catch (dbError) {
+                  console.error('❌ Database save error:', dbError);
+                  const dbErrorMessage = {
+                    type: 'database_error',
+                    error: 'Failed to save routine to database'
+                  };
+                  // controller.enqueue(encoder.encode(`data: ${JSON.stringify(dbErrorMessage)}\n\n`));
+                }
+                
+                const processingTime = Date.now() - startTime;
+                console.log('✅ STREAMING COMPLETE:', { processingTime, type: data.type });
+                
+                // const finalMessage = {
+                //   type: 'metadata',
+                //   data: { processingTime, completed: true }
+                // };
+                // controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalMessage)}\n\n`));
+                break;
+              }
+              
+              if (data.type === 'error') {
+                if (completeRoutineData) {
+                  try {
+                    await saveRoutineToDatabase(
+                      skinType,
+                      skinConcern,
+                      'streaming_error',
+                      JSON.stringify({ error: data.error, partialData: completeRoutineData })
+                    );
+                  } catch (dbError) {
+                    console.error('❌ Database save error on stream error:', dbError);
+                  }
+                }
                 break;
               }
             }
           } catch (error: any) {
-            console.error('❌ STREAMING ERROR:', error); // ADD THIS
+            console.error('❌ STREAMING ERROR:', error);
             const errorMessage = {
               type: 'error',
               error: error.message || 'Stream processing failed'
             };
             controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorMessage)}\n\n`));
           } finally {
-            console.log('🔚 STREAMING ENDED'); // ADD THIS
+            console.log('🔚 STREAMING ENDED');
             controller.close();
           }
         }
       });
+      
       return new Response(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -197,6 +236,31 @@ export async function POST(request: NextRequest) {
         preferredProducts
       );
 
+      if (!routine) {
+        return NextResponse.json(
+          { 
+            success: false, 
+            error: 'Failed to generate routine',
+            processingTime: Date.now() - startTime
+          },
+          { status: 500 }
+        );
+      }
+
+      // Save to database
+      let savedDocument = null;
+      try {
+        savedDocument = await saveRoutineToDatabase(
+          skinType,
+          skinConcern,
+          'standard',
+          JSON.stringify(routine)
+        );
+      } catch (dbError) {
+        console.error('❌ Database save error:', dbError);
+        // Still return the routine even if database save fails
+      }
+
       const processingTime = Date.now() - startTime;
       console.log(`✅ Routine generated successfully in ${processingTime}ms`);
 
@@ -204,6 +268,8 @@ export async function POST(request: NextRequest) {
         {
           success: true,
           data: routine,
+          databaseSaved: savedDocument !== null,
+          documentId: savedDocument?.$id,
           metadata: {
             totalProducts: allProducts.length,
             analyzedProducts: allProducts.length,
