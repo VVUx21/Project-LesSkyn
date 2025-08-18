@@ -348,13 +348,13 @@ async function* generateSkincareRoutineStream(
           
           // Check if we have a complete JSON object
           if (isValidJSON(cleanedChunk)) {
-            yield JSON.stringify({ 
+            const completeData = {
               type: 'complete',
               data: JSON.parse(cleanedChunk)
-            });
+            };
+            yield JSON.stringify(completeData);
             return;
           } else {
-            // Yield partial content for progressive loading
             yield JSON.stringify({ 
               type: 'partial',
               chunk: chunk.text,

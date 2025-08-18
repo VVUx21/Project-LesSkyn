@@ -112,8 +112,8 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
 
   // Generate skincare routine with retry logic
   const generateSkincareRoutine = useCallback(async (useStreaming: boolean = true): Promise<SkincareRoutineResponse> => {
-  const timeout = 60000; // 60 seconds timeout
-  
+  const timeout = 120000; // 120 seconds timeout
+
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
 
@@ -288,18 +288,19 @@ const handleGenerateRoutine = useCallback(async (useStreaming: boolean = true) =
   setProcessingTime(null);
 
   try {
-    await generateSkincareRoutine(useStreaming);
+    const routine = await generateSkincareRoutine(useStreaming);
 
     const queryParams = new URLSearchParams({
       skinType: mapSkinTypeToAPI(userProfile.skinType),
       skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
     });
     
-    setIsGenerating(false);
-    
-    // Use Next.js router instead of window.location
-    router.push(`/skincare_routine?${queryParams.toString()}`);
-    
+    if(routine.success) {
+      setIsGenerating(false);
+      // Use Next.js router instead of window.location
+      router.push(`/skincare_routine?${queryParams.toString()}`);
+    }
+
   } catch (err: any) {
     setError(err.message || 'Failed to generate skincare routine');
     console.error('❌ Final error:', err);
@@ -365,7 +366,7 @@ const handleRetry = useCallback(() => {
         <MultiStepLoader
           loadingStates={loadingStates}
           loading={true}
-          duration={2000}
+          duration={3000}
           loop={false}
         />
       )}
