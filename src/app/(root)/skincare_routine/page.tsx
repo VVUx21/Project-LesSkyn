@@ -4,6 +4,7 @@ import { useRouter} from 'next/navigation';
 import {SkincareData, UserPreferences,GetRoutineResponse } from '@/lib/types';
 import { ChevronRight, Download, Home, RotateCcw, AlertTriangle, RefreshCw } from 'lucide-react';
 import Navbar from '@/components/Navbar';
+import { exportRoutineReport } from '@/lib/utils';
 
 enum LoadingState {
   POLLING = 'polling',
@@ -24,6 +25,8 @@ function SkincarePollingResults({
   const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.POLLING);
   const [skincareData, setSkincareData] = useState<SkincareData | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [pdfError, setPdfError] = useState<string | null>(null);
 
   const [activeRoutine, setActiveRoutine] = useState<'morning' | 'evening'>('morning');
   const [pollingAttempt, setPollingAttempt] = useState(0);
@@ -560,16 +563,35 @@ function SkincarePollingResults({
               Retake Quiz
             </button>
             
-            <button 
-              onClick={() => {
-                // Implement download functionality
-                console.log('Download routine report');
-              }}
-              className="flex items-center gap-2 text-white/80 hover:text-white transition-colors duration-200 font-medium"
-            >
-              <Download className="w-5 h-5" />
-              Download Report
-            </button>
+            <button
+            disabled={isGeneratingPDF || !skincareData}
+            onClick={async () => {
+              if (!skincareData || !userPreferences) return;
+              try {
+                setIsGeneratingPDF(true);
+                exportRoutineReport(skincareData, userPreferences, doTips, dontTips);
+              } finally {
+                setIsGeneratingPDF(false);
+              }
+            }}
+            className={`flex items-center gap-2 font-medium transition-all duration-200 ${
+              isGeneratingPDF
+                ? "text-white/50 cursor-not-allowed"
+                : "text-white/80 hover:text-white"
+            }`}
+          >
+            {isGeneratingPDF ? (
+              <>
+                <RefreshCw className="w-5 h-5 animate-spin" />
+                Generating Report...
+              </>
+            ) : (
+              <>
+                <Download className="w-5 h-5" />
+                Download Report
+              </>
+            )}
+          </button>
           </div>
         </div>
       </div>
