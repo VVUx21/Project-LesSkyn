@@ -143,10 +143,8 @@ export async function POST(request: NextRequest) {
               
               console.log('📦 STREAMING CHUNK:', data.type, data);
               
-              // Forward the chunk to client
               controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
               
-              // If complete, save to database
               if (data.type === 'complete') {
                   completeRoutineData = data.data;
                   
@@ -174,18 +172,11 @@ export async function POST(request: NextRequest) {
                       await new Promise(resolve => setTimeout(resolve, 10));
                     }
                     
-                    // === COMPLETION SIGNAL ===
-                    // After ALL chunks are sent, send a final "assembly complete" signal
                     const finalSignal = { 
-                      type: 'complete_assembled'  // Special signal: "all chunks sent, assemble them now"
+                      type: 'complete_assembled'
                     };
-                    
-                    // This tells the frontend: "I've sent all the pieces, put them together!"
                     controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalSignal)}\n\n`));
-                    
                   } else {
-                    // === DIRECT SEND (for small data) ===
-                    // If data is small enough, send it directly without chunking
                     controller.enqueue(encoder.encode(`data: ${jsonString}\n\n`));
                   }
                 try {

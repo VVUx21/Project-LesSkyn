@@ -1,7 +1,7 @@
 "use client"
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useRouter} from 'next/navigation';
-import { RoutineStep,WeeklyTreatment,SkincareData, UserPreferences,GetRoutineResponse } from '@/lib/types';
+import {SkincareData, UserPreferences,GetRoutineResponse } from '@/lib/types';
 import { ChevronRight, Download, Home, RotateCcw, AlertTriangle, RefreshCw } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 
@@ -46,6 +46,7 @@ function SkincarePollingResults({
     const resolveParams = async () => {
       try {
         const params = await searchParams;
+        console.log(params);
         setResolvedSearchParams(params);
       } catch (error) {
         console.error('Error resolving search params:', error);
@@ -236,7 +237,13 @@ function SkincarePollingResults({
   const { doTips, dontTips } = useMemo(() => {
     const tips = skincareData?.general_notes_and_tips || [];
     return {
-      doTips: tips.slice(0, Math.max(3, Math.floor(tips.length / 2))),
+      doTips:[
+      'Consistency is key: Adhere to your routine daily for best results.',
+      'Patch test new products: Always test a new product on a small area of your skin before applying it to your entire face to check for any adverse reactions.',
+      "Listen to your skin: Adjust the frequency of active ingredients (like future retinol or AHAs) based on your skin's tolerance. If irritation occurs, reduce usage.",
+      'Hydration is crucial: Even with normal skin, ensuring adequate hydration helps maintain skin barrier health and supports anti-aging efforts.',
+      'Sun protection is non-negotiable: Always use a broad-spectrum sunscreen in the morning, regardless of the weather, to protect against UV damage, which is a primary cause of premature aging.'
+    ],
       dontTips: [
         "Don't skip patch testing new products on sensitive areas",
         "Don't forget broad-spectrum sunscreen, even indoors or on cloudy days",
@@ -369,7 +376,7 @@ function SkincarePollingResults({
       </div>
     );
   }
-
+  
   // Main results view
   return (
     <div className="bg-gradient-to-br from-[#7772E7] via-[#9A68EB] to-[#D881F5F5] p-4 sm:p-6">
@@ -456,7 +463,7 @@ function SkincarePollingResults({
                 
                 <p className="text-[#161326]/80 text-sm mb-3 leading-relaxed">
                   <span className="font-medium">Why this works: </span>
-                  {step.why_chosen}
+                  {step.reasoning}
                 </p>
                 
                 <p className="text-[#161326]/70 text-sm mb-4 leading-relaxed">
@@ -489,8 +496,7 @@ function SkincarePollingResults({
               {skincareData.weekly_treatments.map((treatment, index) => (
                 <div key={index} className="bg-[#F3E9FF26] backdrop-blur-sm rounded-xl p-5 border border-white/20">
                   <h4 className="text-[#161326] font-bold text-base mb-2">{treatment.treatment_type}</h4>
-                  <p className="text-[#161326] font-semibold text-sm mb-2">{treatment.product_name}</p>
-                  <p className="text-[#161326]/80 text-sm mb-2">{treatment.why_chosen}</p>
+                  <p className="text-[#161326]/70 text-sm mb-4">{treatment.recommendation}</p>
                   <p className="text-[#161326]/70 text-sm">{treatment.how_to_use}</p>
                 </div>
               ))}

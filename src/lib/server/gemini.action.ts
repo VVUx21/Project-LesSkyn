@@ -75,7 +75,7 @@ async function* generateSkincareRoutineStream(
                 **INSTRUCTIONS:**
                 1. Create EXACTLY 4 steps for both AM and PM routines
                 2. AM: Step 1 (Cleanser) → Step 2 (Serum/Treatment) → Step 3 (Facewash) → Step 4 (Moisturizer)
-                3. PM: Step 1 (Cleanser) → Step 2 (Active Treatment) → Step 3 (Facewash) → Step 4 (Moisturizer)
+                3. PM: Step 1 (Cleanser) → Step 2 (Serum/Treatment) → Step 3 (Facewash) → Step 4 (Moisturizer)
                 4. Match products based on their ingredients with the essential ingredients list
                 5. Consider price constraints from "Other Suggestion"
                 6. For each step, explain WHY this specific product is chosen and HOW to use it
@@ -102,234 +102,63 @@ async function* generateSkincareRoutineStream(
         temperature: 0.2,
         topP: 0.9,
         topK: 40,
-        maxOutputTokens: 8000,
+        maxOutputTokens: 5000,
         responseSchema: {
           type: Type.OBJECT,
           properties: {
-            morningRoutine: {
+            routine: {
               type: Type.OBJECT,
               properties: {
-                step1Cleanser: {
-                  type: Type.OBJECT,
-                  properties: {
-                    stepNumber: { type: Type.INTEGER },
-                    stepName: { type: Type.STRING },
-                    product: {
-                      type: Type.OBJECT,
-                      properties: {
-                        productName: { type: Type.STRING },
-                        productLink: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        price: { type: Type.NUMBER },
-                        currency: { type: Type.STRING },
-                        rating: { type: Type.NUMBER },
-                        source: { type: Type.STRING }
-                      },
-                      required: ["productName", "productLink", "description", "price", "currency", "source"]
-                    },
-                    whyThisProduct: { type: Type.STRING },
-                    howToUse: { type: Type.STRING }
-                  },
-                  required: ["stepNumber", "stepName", "product", "whyThisProduct", "howToUse"]
-                },
-                step2Serum: {
-                  type: Type.OBJECT,
-                  properties: {
-                    stepNumber: { type: Type.INTEGER },
-                    stepName: { type: Type.STRING },
-                    product: {
-                      type: Type.OBJECT,
-                      properties: {
-                        productName: { type: Type.STRING },
-                        productLink: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        price: { type: Type.NUMBER },
-                        currency: { type: Type.STRING },
-                        rating: { type: Type.NUMBER },
-                        source: { type: Type.STRING }
-                      },
-                      required: ["productName", "productLink", "description", "price", "currency", "source"]
-                    },
-                    whyThisProduct: { type: Type.STRING },
-                    howToUse: { type: Type.STRING }
-                  },
-                  required: ["stepNumber", "stepName", "product", "whyThisProduct", "howToUse"]
-                },
-                step3Moisturizer: {
-                  type: Type.OBJECT,
-                  properties: {
-                    stepNumber: { type: Type.INTEGER },
-                    stepName: { type: Type.STRING },
-                    product: {
-                      type: Type.OBJECT,
-                      properties: {
-                        productName: { type: Type.STRING },
-                        productLink: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        price: { type: Type.NUMBER },
-                        currency: { type: Type.STRING },
-                        rating: { type: Type.NUMBER },
-                        source: { type: Type.STRING }
-                      },
-                      required: ["productName", "productLink", "description", "price", "currency", "source"]
-                    },
-                    whyThisProduct: { type: Type.STRING },
-                    howToUse: { type: Type.STRING }
-                  },
-                  required: ["stepNumber", "stepName", "product", "whyThisProduct", "howToUse"]
-                },
-                step4Sunscreen: {
-                  type: Type.OBJECT,
-                  properties: {
-                    stepNumber: { type: Type.INTEGER },
-                    stepName: { type: Type.STRING },
-                    product: {
-                      type: Type.OBJECT,
-                      properties: {
-                        productName: { type: Type.STRING },
-                        productLink: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        price: { type: Type.NUMBER },
-                        currency: { type: Type.STRING },
-                        rating: { type: Type.NUMBER },
-                        source: { type: Type.STRING }
-                      },
-                      required: ["productName", "productLink", "description", "price", "currency", "source"]
-                    },
-                    whyThisProduct: { type: Type.STRING },
-                    howToUse: { type: Type.STRING }
-                  },
-                  required: ["stepNumber", "stepName", "product", "whyThisProduct", "howToUse"]
-                }
-              },
-              required: ["step1Cleanser", "step3Moisturizer", "step4Sunscreen"]
-            },
-            eveningRoutine: {
-              type: Type.OBJECT,
-              properties: {
-                step1Cleanser: {
-                  type: Type.OBJECT,
-                  properties: {
-                    stepNumber: { type: Type.INTEGER },
-                    stepName: { type: Type.STRING },
-                    product: {
-                      type: Type.OBJECT,
-                      properties: {
-                        productName: { type: Type.STRING },
-                        productLink: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        price: { type: Type.NUMBER },
-                        currency: { type: Type.STRING },
-                        rating: { type: Type.NUMBER },
-                        source: { type: Type.STRING }
-                      },
-                      required: ["productName", "productLink", "description", "price", "currency", "source"]
-                    },
-                    whyThisProduct: { type: Type.STRING },
-                    howToUse: { type: Type.STRING }
-                  },
-                  required: ["stepNumber", "stepName", "product", "whyThisProduct", "howToUse"]
-                },
-                step2Treatment: {
-                  type: Type.OBJECT,
-                  properties: {
-                    stepNumber: { type: Type.INTEGER },
-                    stepName: { type: Type.STRING },
-                    product: {
-                      type: Type.OBJECT,
-                      properties: {
-                        productName: { type: Type.STRING },
-                        productLink: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        price: { type: Type.NUMBER },
-                        currency: { type: Type.STRING },
-                        rating: { type: Type.NUMBER },
-                        source: { type: Type.STRING }
-                      },
-                      required: ["productName", "productLink", "description", "price", "currency", "source"]
-                    },
-                    whyThisProduct: { type: Type.STRING },
-                    howToUse: { type: Type.STRING }
-                  },
-                  required: ["stepNumber", "stepName", "product", "whyThisProduct", "howToUse"]
-                },
-                step3Moisturizer: {
-                  type: Type.OBJECT,
-                  properties: {
-                    stepNumber: { type: Type.INTEGER },
-                    stepName: { type: Type.STRING },
-                    product: {
-                      type: Type.OBJECT,
-                      properties: {
-                        productName: { type: Type.STRING },
-                        productLink: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        price: { type: Type.NUMBER },
-                        currency: { type: Type.STRING },
-                        rating: { type: Type.NUMBER },
-                        source: { type: Type.STRING }
-                      },
-                      required: ["productName", "productLink", "description", "price", "currency", "source"]
-                    },
-                    whyThisProduct: { type: Type.STRING },
-                    howToUse: { type: Type.STRING }
-                  },
-                  required: ["stepNumber", "stepName", "product", "whyThisProduct", "howToUse"]
-                },
-                step4NightCare: {
-                  type: Type.OBJECT,
-                  properties: {
-                    stepNumber: { type: Type.INTEGER },
-                    stepName: { type: Type.STRING },
-                    product: {
-                      type: Type.OBJECT,
-                      properties: {
-                        productName: { type: Type.STRING },
-                        productLink: { type: Type.STRING },
-                        description: { type: Type.STRING },
-                        price: { type: Type.NUMBER },
-                        currency: { type: Type.STRING },
-                        rating: { type: Type.NUMBER },
-                        source: { type: Type.STRING }
-                      },
-                      required: ["productName", "productLink", "description", "price", "currency", "source"]
-                    },
-                    whyThisProduct: { type: Type.STRING },
-                    howToUse: { type: Type.STRING }
-                  },
-                  required: ["stepNumber", "stepName", "product", "whyThisProduct", "howToUse"]
-                }
-              },
-              required: ["step1Cleanser", "step2Treatment", "step3Moisturizer"]
-            },
-            weeklyTreatments: {
-              type: Type.OBJECT,
-              properties: {
-                treatment: { type: Type.STRING },
-                frequency: { type: Type.STRING },
-                recommendedProducts: {
+                morning: {
                   type: Type.ARRAY,
                   items: {
                     type: Type.OBJECT,
                     properties: {
-                      productName: { type: Type.STRING },
-                      productLink: { type: Type.STRING },
-                      description: { type: Type.STRING },
-                      price: { type: Type.NUMBER },
-                      whyRecommended: { type: Type.STRING }
+                      step: { type: Type.INTEGER },
+                      product_name: { type: Type.STRING },
+                      product_url: { type: Type.STRING },
+                      reasoning: { type: Type.STRING },
+                      how_to_use: { type: Type.STRING }
                     },
-                    required: ["productName", "productLink", "description", "price", "whyRecommended"]
+                    required: ["step", "product_name", "product_url", "reasoning", "how_to_use"]
+                  }
+                },
+                evening: {
+                  type: Type.ARRAY,
+                  items: {
+                    type: Type.OBJECT,
+                    properties: {
+                      step: { type: Type.INTEGER },
+                      product_name: { type: Type.STRING },
+                      product_url: { type: Type.STRING },
+                      reasoning: { type: Type.STRING },
+                      how_to_use: { type: Type.STRING }
+                    },
+                    required: ["step", "product_name", "product_url", "reasoning", "how_to_use"]
                   }
                 }
               },
-              required: ["treatment", "frequency", "recommendedProducts"]
+              required: ["morning", "evening"]
             },
-            routineNotes: {
+            weekly_treatments: {
+              type: Type.ARRAY,
+              items: {
+                type: Type.OBJECT,
+                properties: {
+                  treatment_type: { type: Type.STRING },
+                  product_suggestion: { type: Type.STRING },
+                  reasoning: { type: Type.STRING },
+                  how_to_use: { type: Type.STRING }
+                },
+                required: ["treatment_type", "product_suggestion", "reasoning", "how_to_use"]
+              }
+            },
+            general_notes: {
               type: Type.ARRAY,
               items: { type: Type.STRING }
             }
           },
-          required: ["morningRoutine", "eveningRoutine", "routineNotes"]
+          required: ["routine", "general_notes"]
         }
       }
     });

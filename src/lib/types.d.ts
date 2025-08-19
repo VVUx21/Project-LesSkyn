@@ -100,15 +100,13 @@ export interface RoutineStep {
   step: number;
   product_name: string;
   product_url: string;
-  why_chosen: string;
+  reasoning: string;
   how_to_use: string;
 }
 
 export interface WeeklyTreatment {
   treatment_type: string;
-  product_name: string;
-  product_url: string;
-  why_chosen: string;
+  recommendation: string;
   how_to_use: string;
 }
 

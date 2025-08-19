@@ -66,6 +66,7 @@ export async function GET(request: NextRequest) {
     };
 
     const rawData = routineDocument.generatedRoutine;
+    //console.log(rawData);
 
     if (!rawData || rawData.trim() === "") {
       console.warn(`⚠️ Routine found but data is empty. Document ID: ${routineDocument.$id}`);
@@ -85,6 +86,7 @@ export async function GET(request: NextRequest) {
     }
 
     const routineData = JSON.parse(rawData);
+    //console.log("Routine data parsed successfully:", routineData);
 
     console.log(`✅ Routine found! Document ID: ${routineDocument.$id}`);
 
