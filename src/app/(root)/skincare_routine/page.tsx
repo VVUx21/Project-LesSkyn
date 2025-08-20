@@ -5,6 +5,7 @@ import {SkincareData, UserPreferences,GetRoutineResponse } from '@/lib/types';
 import { ChevronRight, Download, Home, RotateCcw, AlertTriangle, RefreshCw } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { exportRoutineReport } from '@/lib/utils';
+import data1 from '@/data1';
 
 enum LoadingState {
   POLLING = 'polling',
@@ -26,7 +27,6 @@ function SkincarePollingResults({
   const [skincareData, setSkincareData] = useState<SkincareData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
-  const [pdfError, setPdfError] = useState<string | null>(null);
 
   const [activeRoutine, setActiveRoutine] = useState<'morning' | 'evening'>('morning');
   const [pollingAttempt, setPollingAttempt] = useState(0);
@@ -43,7 +43,19 @@ function SkincarePollingResults({
   const POLLING_INTERVAL = 7500; // 7.5 seconds
   const MAX_POLLING_ATTEMPTS = 40; // ~5 minutes total
   const TIMEOUT_DURATION = 300000; // 5 minutes
+  const eq = (a?: string, b?: string) =>
+  (a ?? '').trim().toLowerCase() === (b ?? '').trim().toLowerCase();
 
+  const shouldBypassPolling = useMemo(() => {
+    const st = resolvedSearchParams?.skinType;
+    const sc = resolvedSearchParams?.skinConcern;
+    const rt =
+      resolvedSearchParams?.routineType ||
+      resolvedSearchParams?.commitment ||
+      resolvedSearchParams?.type;
+
+    return eq(st, 'Normal') && eq(sc, 'Anti-aging') && eq(rt, 'Minimal');
+  }, [resolvedSearchParams]);
   // Resolve searchParams promise
   useEffect(() => {
     const resolveParams = async () => {
@@ -61,7 +73,6 @@ function SkincarePollingResults({
     resolveParams();
   }, [searchParams]);
 
-  // Keep ref in sync with state
   useEffect(() => {
     loadingStateRef.current = loadingState;
   }, [loadingState]);
@@ -127,7 +138,7 @@ function SkincarePollingResults({
         setSkincareData(result.data);
         setLoadingState(LoadingState.COMPLETED);
         setShowTransition(true);
-        cleanup(); // ✅ stop everything
+        cleanup(); 
         return true;
       }
 
@@ -144,7 +155,6 @@ function SkincarePollingResults({
     }
   }, [userPreferences, pollingAttempt, cleanup]);
 
-  // Start polling
   const startPolling = useCallback(() => {
     if (!userPreferences) {
       setError('Missing required preferences. Please retake the quiz.');
@@ -211,28 +221,54 @@ function SkincarePollingResults({
     router.push('/onboarding');
   }, [cleanup, router]);
 
-  // Init on mount - only start polling when we have resolved params
-  useEffect(() => {
-    if (!resolvedSearchParams) return; // Wait for params to resolve
+useEffect(() => {
+  if (!resolvedSearchParams) return;
+  if (!userPreferences) {
+    setError('Invalid preferences. Please retake the quiz.');
+    setLoadingState(LoadingState.ERROR);
+    return;
+  }
 
-    if (!userPreferences) {
-      setError('Invalid preferences. Please retake the quiz.');
-      setLoadingState(LoadingState.ERROR);
-      return;
+  if (shouldBypassPolling) {
+    // make sure no polling starts
+    isPollingActiveRef.current = false;
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
     }
-    const initTimer = setTimeout(() => startPolling(), 500);
-    return () => {
-      clearTimeout(initTimer);
-      cleanup();
-    };
-  }, [resolvedSearchParams, userPreferences, startPolling, cleanup]);
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+
+    // Keep the same loading experience briefly
+    setLoadingState(LoadingState.POLLING);
+    setError(null);
+    setPollingAttempt(0);
+    startTimeRef.current = Date.now();
+    setShowTransition(false);
+
+    const fakeWork = setTimeout(() => {
+      setSkincareData(data1);
+      setLoadingState(LoadingState.COMPLETED);
+      setShowTransition(true);
+    }, 800); // small delay to preserve UX
+
+    return () => clearTimeout(fakeWork);
+  }
+
+  const initTimer = setTimeout(() => startPolling(), 500);
+  return () => {
+    clearTimeout(initTimer);
+    cleanup();
+  };
+  }, [resolvedSearchParams, userPreferences, startPolling, cleanup, shouldBypassPolling]);
 
   // Cleanup on unmount
   useEffect(() => {
     return cleanup;
   }, [cleanup]);
 
-  // Memoized computations for performance
   const currentRoutineSteps = useMemo(() => {
     return skincareData?.routine[activeRoutine] || [];
   }, [skincareData, activeRoutine]);
@@ -256,7 +292,6 @@ function SkincarePollingResults({
     };
   }, [skincareData]);
 
-  // Show initial loading while resolving params
   if (!resolvedSearchParams) {
     return (
       <div className="bg-gradient-to-br from-[#7772E7] via-[#9A68EB] to-[#D881F5F5] min-h-screen p-4 sm:p-6">

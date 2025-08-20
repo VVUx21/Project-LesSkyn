@@ -8,10 +8,11 @@ import Image from "next/image"
 import { useCallback, useState } from "react"
 import { useRouter } from "next/navigation"
 import React from "react"
-// No additional routing setup needed here since useRouter from "next/navigation" is already imported and used for client-side navigation.
+
 interface SummaryStepProps {
   onComplete: () => void
 }
+
 const loadingStates = [
   { text: "Searching for your personalized routine..." },
   { text: "AI is still crafting your perfect skincare plan..." },
@@ -110,9 +111,8 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
     }
   };
 
-  // Generate skincare routine with retry logic
   const generateSkincareRoutine = useCallback(async (useStreaming: boolean = true): Promise<SkincareRoutineResponse> => {
-  const timeout = 120000; // 120 seconds timeout
+  const timeout = 120000; 
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), timeout);
@@ -139,7 +139,6 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
     });
 
     const startTime = Date.now();
-    const endpoint = `/api/getmyroutine${useStreaming ? '?stream=true' : ''}`;
     
     if (useStreaming) {
       return await handleStreamingResponse(requestPayload, controller, startTime, timeoutId);
@@ -287,32 +286,73 @@ const handleGenerateRoutine = useCallback(async (useStreaming: boolean = true) =
   setError(null);
   setProcessingTime(null);
 
+  const apiSkinType = mapSkinTypeToAPI(userProfile.skinType);
+  const apiSkinConcern = mapSkinConcernToAPI(userProfile.skinConcern);
+  const apiCommitment = mapRoutineTypeToAPI(userProfile.routineType);
+
+  const queryParams = new URLSearchParams({
+    skinType: apiSkinType,
+    skinConcern: apiSkinConcern,
+  });
+
+  if (apiSkinType === "Normal" && apiSkinConcern === "Anti-aging" && apiCommitment === "Minimal") {
+    try {
+      const controller = new AbortController();
+      await new Promise((resolve) => setTimeout(resolve, 15000));
+      const timeoutId = setTimeout(() => controller.abort(), 20000);
+
+      const res = await fetch(`/api/get-routine?${queryParams.toString()}`, {
+        method: "GET",
+        signal: controller.signal,
+        headers: { "Accept": "application/json" },
+      });
+
+      clearTimeout(timeoutId);
+
+      const json = await res.json();
+
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.error || json?.message || "Routine not found");
+      }
+
+      // If your API returns processingTime in metadata, surface it in UI
+      if (json?.metadata?.processingTime != null) {
+        setProcessingTime(json.metadata.processingTime);
+      }
+
+      setIsGenerating(false);
+      router.push(`/skincare_routine?${queryParams.toString()}`);
+      return; // IMPORTANT: stop here; do not run the rest of the process
+    } catch (err: any) {
+      setError(err?.message || "Failed to fetch routine");
+      console.error("❌ Direct routine fetch failed:", err);
+      setIsGenerating(false);
+      return; // Do not continue to generation per your requirement
+    }
+  }
+
+  // 2) Default path: use the existing generation flow
   try {
     const routine = await generateSkincareRoutine(useStreaming);
 
-    const queryParams = new URLSearchParams({
-      skinType: mapSkinTypeToAPI(userProfile.skinType),
-      skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
-    });
-    
-    if(routine.success) {
+    if (routine?.success) {
       setIsGenerating(false);
-      // Use Next.js router instead of window.location
       router.push(`/skincare_routine?${queryParams.toString()}`);
+    } else {
+      throw new Error("Routine generation failed");
     }
-
   } catch (err: any) {
-    setError(err.message || 'Failed to generate skincare routine');
-    console.error('❌ Final error:', err);
+    setError(err?.message || "Failed to generate skincare routine");
+    console.error("❌ Final error:", err);
     setIsGenerating(false);
   }
-}, [generateSkincareRoutine, userProfile, router]);
+}, [userProfile, router, generateSkincareRoutine]);
+
 
 const handleRetry = useCallback(() => {
   handleGenerateRoutine(false); // Use regular mode for retry
 }, [handleGenerateRoutine]);
 
-  // Display labels (keep existing functions)
   const getSkinTypeLabel = () => {
     switch (userProfile.skinType) {
       case "Oily T-zone (forehead, nose, chin) but dry cheeks":
@@ -366,7 +406,7 @@ const handleRetry = useCallback(() => {
         <MultiStepLoader
           loadingStates={loadingStates}
           loading={true}
-          duration={3000}
+          duration={2000}
           loop={false}
         />
       )}

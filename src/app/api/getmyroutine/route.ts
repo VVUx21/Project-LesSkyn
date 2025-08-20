@@ -159,16 +159,14 @@ export async function POST(request: NextRequest) {
                       
                       // Send each chunk with metadata
                       const chunkData = {
-                        type: 'chunk',           // Tells frontend this is a piece of data
-                        data: chunk,             // The actual JSON piece
-                        isComplete: isLast,      // Is this the final chunk?
-                        chunkIndex: Math.floor(i / chunkSize)  // Order number (0, 1, 2...)
+                        type: 'chunk',           
+                        data: chunk,             
+                        isComplete: isLast,    
+                        chunkIndex: Math.floor(i / chunkSize)
                       };
                       
-                      // Send this chunk via Server-Sent Events
                       controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunkData)}\n\n`));
-                      
-                      // Small delay to prevent overwhelming the connection
+                    
                       await new Promise(resolve => setTimeout(resolve, 10));
                     }
                     
@@ -187,7 +185,6 @@ export async function POST(request: NextRequest) {
                     JSON.stringify(completeRoutineData) // Store as JSON string
                   );
                   
-                  // Send success confirmation to client
                   const saveConfirmation = {
                     type: 'database_saved',
                     message: 'Routine successfully saved to database'
