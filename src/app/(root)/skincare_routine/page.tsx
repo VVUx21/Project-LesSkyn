@@ -1,61 +1,33 @@
 "use client"
-import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter} from 'next/navigation';
-import {SkincareData, UserPreferences,GetRoutineResponse } from '@/lib/types';
+import {SkincareData, UserPreferences } from '@/lib/types';
 import { ChevronRight, Download, Home, RotateCcw, AlertTriangle, RefreshCw } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { exportRoutineReport } from '@/lib/utils';
-import data1 from '@/data1';
 
 enum LoadingState {
-  POLLING = 'polling',
+  LOADING = 'loading',
   COMPLETED = 'completed',
-  ERROR = 'error',
-  TIMEOUT = 'timeout'
+  ERROR = 'error'
 }
 
 interface PageProps {
   searchParams: Promise<{ [key: string]: string | undefined }>;
 }
 
-function SkincarePollingResults({
+function SkincareResults({
   searchParams,
 }: PageProps) {
   const router = useRouter();
   const [resolvedSearchParams, setResolvedSearchParams] = useState<{ [key: string]: string | undefined } | null>(null);
-  const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.POLLING);
+  const [loadingState, setLoadingState] = useState<LoadingState>(LoadingState.LOADING);
   const [skincareData, setSkincareData] = useState<SkincareData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
 
   const [activeRoutine, setActiveRoutine] = useState<'morning' | 'evening'>('morning');
-  const [pollingAttempt, setPollingAttempt] = useState(0);
-  const [showTransition, setShowTransition] = useState(false);
 
-  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
-  const abortControllerRef = useRef<AbortController | null>(null);
-  const startTimeRef = useRef<number>(Date.now());
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const loadingStateRef = useRef<LoadingState>(LoadingState.POLLING);
-  const isPollingActiveRef = useRef(true);
-
-  // Constants
-  const POLLING_INTERVAL = 7500; // 7.5 seconds
-  const MAX_POLLING_ATTEMPTS = 40; // ~5 minutes total
-  const TIMEOUT_DURATION = 300000; // 5 minutes
-  const eq = (a?: string, b?: string) =>
-  (a ?? '').trim().toLowerCase() === (b ?? '').trim().toLowerCase();
-
-  const shouldBypassPolling = useMemo(() => {
-    const st = resolvedSearchParams?.skinType;
-    const sc = resolvedSearchParams?.skinConcern;
-    const rt =
-      resolvedSearchParams?.routineType ||
-      resolvedSearchParams?.commitment ||
-      resolvedSearchParams?.type;
-
-    return eq(st, 'Normal') && eq(sc, 'Anti-aging') && eq(rt, 'Minimal');
-  }, [resolvedSearchParams]);
   // Resolve searchParams promise
   useEffect(() => {
     const resolveParams = async () => {
@@ -73,10 +45,6 @@ function SkincarePollingResults({
     resolveParams();
   }, [searchParams]);
 
-  useEffect(() => {
-    loadingStateRef.current = loadingState;
-  }, [loadingState]);
-
   const userPreferences: UserPreferences | null = useMemo(() => {
     try {
       if (!resolvedSearchParams?.skinType || !resolvedSearchParams?.skinConcern) return null;
@@ -89,186 +57,78 @@ function SkincarePollingResults({
     }
   }, [resolvedSearchParams]);
 
-  const cleanup = useCallback(() => {
-    isPollingActiveRef.current = false;
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-    if (abortControllerRef.current) {
-      abortControllerRef.current.abort();
-      abortControllerRef.current = null;
-    }
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-  }, []);
-
-  const pollForRoutine = useCallback(async () => {
-    if (!userPreferences || !isPollingActiveRef.current) return false;
-
-    try {
-      abortControllerRef.current = new AbortController();
-      const params = new URLSearchParams({
-        skinType: userPreferences.skinType,
-        skinConcern: userPreferences.skinConcern,
-      });
-
-      console.log(`[Polling] Attempt ${pollingAttempt + 1}/${MAX_POLLING_ATTEMPTS} - Checking...`);
-
-      const response = await fetch(`/api/get-routine?${params.toString()}`, {
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
-        signal: abortControllerRef.current.signal,
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          console.log(`[Polling] Routine not ready (404), continuing...`);
-          return false;
-        }
-        throw new Error(`HTTP ${response.status}: ${response.statusText || 'Failed to fetch'}`);
-      }
-
-      const result: GetRoutineResponse = await response.json();
-
-      if (result.success && result.data?.routine?.morning && result.data?.routine?.evening) {
-        console.log(`[Polling] ✅ Routine found! Stopping polling`);
-        setSkincareData(result.data);
-        setLoadingState(LoadingState.COMPLETED);
-        setShowTransition(true);
-        cleanup(); 
-        return true;
-      }
-
-      console.log(`[Polling] No routine yet: ${result.message || 'Still processing'}`);
-      return false;
-    } catch (error: any) {
-      if (error.name === 'AbortError') {
-        console.log('[Polling] Request aborted');
-        abortControllerRef.current = null;
-        return false;
-      }
-      console.error(`[Polling] Error:`, error.message);
-      return false;
-    }
-  }, [userPreferences, pollingAttempt, cleanup]);
-
-  const startPolling = useCallback(() => {
+  const fetchRoutine = useCallback(async () => {
     if (!userPreferences) {
       setError('Missing required preferences. Please retake the quiz.');
       setLoadingState(LoadingState.ERROR);
       return;
     }
 
-    console.log('[Polling] Starting...');
-    setLoadingState(LoadingState.POLLING);
-    setError(null);
-    setPollingAttempt(0);
-    startTimeRef.current = Date.now();
-    isPollingActiveRef.current = true;
+    try {
+      setLoadingState(LoadingState.LOADING);
+      setError(null);
 
-    // Initial poll
-    pollForRoutine().then((success) => {
-      if (!success && loadingStateRef.current === LoadingState.POLLING) {
-        pollingIntervalRef.current = setInterval(async () => {
-          setPollingAttempt(prev => {
-            const newAttempt = prev + 1;
-            if (newAttempt >= MAX_POLLING_ATTEMPTS) {
-              console.log('[Polling] ❌ Max attempts reached');
-              cleanup();
-              setLoadingState(LoadingState.TIMEOUT);
-              setError('Your routine is taking longer than expected. Please try again.');
-              return prev;
-            }
-            pollForRoutine(); // will cleanup itself on success
-            return newAttempt;
-          });
-        }, POLLING_INTERVAL);
+      const params = new URLSearchParams({
+        skinType: userPreferences.skinType,
+        skinConcern: userPreferences.skinConcern,
+      });
+
+      console.log('Fetching routine...');
+
+      const response = await fetch(`/api/get-routine?${params.toString()}`, {
+        method: 'GET',
+        headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-cache' },
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText || 'Failed to fetch'}`);
       }
-    });
 
-    // Global timeout
-    timeoutRef.current = setTimeout(() => {
-      if (loadingStateRef.current === LoadingState.POLLING) {
-        console.log('[Polling] ⏰ Timeout reached');
-        cleanup();
-        setLoadingState(LoadingState.TIMEOUT);
-        setError('Your routine generation timed out. Please try again.');
+      const result = await response.json();
+
+      if (result.success && result.data?.routine?.morning && result.data?.routine?.evening) {
+        console.log('✅ Routine found!');
+        setSkincareData(result.data);
+        setLoadingState(LoadingState.COMPLETED);
+      } else {
+        throw new Error(result.message || 'No routine data found');
       }
-    }, TIMEOUT_DURATION);
-  }, [userPreferences, pollForRoutine, cleanup]);
-
-  // Retry mechanism
-  const handleRetry = useCallback(() => {
-    cleanup();
-    setError(null);
-    setSkincareData(null);
-    setShowTransition(false);
-    setPollingAttempt(0);
-    startPolling();
-  }, [cleanup, startPolling]);
+    } catch (error: any) {
+      console.error('Fetch error:', error.message);
+      setError(error.message || 'Failed to load routine');
+      setLoadingState(LoadingState.ERROR);
+    }
+  }, [userPreferences]);
 
   // Navigation
   const handleNavigateHome = useCallback(() => {
-    cleanup();
     router.push('/');
-  }, [cleanup, router]);
+  }, [router]);
 
   const handleRetakeQuiz = useCallback(() => {
-    cleanup();
     router.push('/onboarding');
-  }, [cleanup, router]);
+  }, [router]);
 
-useEffect(() => {
-  if (!resolvedSearchParams) return;
-  if (!userPreferences) {
-    setError('Invalid preferences. Please retake the quiz.');
-    setLoadingState(LoadingState.ERROR);
-    return;
-  }
-
-  if (shouldBypassPolling) {
-    // make sure no polling starts
-    isPollingActiveRef.current = false;
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-
-    // Keep the same loading experience briefly
-    setLoadingState(LoadingState.POLLING);
+  const handleRetry = useCallback(() => {
     setError(null);
-    setPollingAttempt(0);
-    startTimeRef.current = Date.now();
-    setShowTransition(false);
+    setSkincareData(null);
+    fetchRoutine();
+  }, [fetchRoutine]);
 
-    const fakeWork = setTimeout(() => {
-      setSkincareData(data1);
-      setLoadingState(LoadingState.COMPLETED);
-      setShowTransition(true);
-    }, 800); // small delay to preserve UX
-
-    return () => clearTimeout(fakeWork);
-  }
-
-  const initTimer = setTimeout(() => startPolling(), 500);
-  return () => {
-    clearTimeout(initTimer);
-    cleanup();
-  };
-  }, [resolvedSearchParams, userPreferences, startPolling, cleanup, shouldBypassPolling]);
-
-  // Cleanup on unmount
+  // Init on mount - fetch routine when we have resolved params
   useEffect(() => {
-    return cleanup;
-  }, [cleanup]);
+    if (!resolvedSearchParams) return; // Wait for params to resolve
 
+    if (!userPreferences) {
+      setError('Invalid preferences. Please retake the quiz.');
+      setLoadingState(LoadingState.ERROR);
+      return;
+    }
+    
+    fetchRoutine();
+  }, [resolvedSearchParams, userPreferences, fetchRoutine]);
+
+  // Memoized computations for performance
   const currentRoutineSteps = useMemo(() => {
     return skincareData?.routine[activeRoutine] || [];
   }, [skincareData, activeRoutine]);
@@ -292,6 +152,7 @@ useEffect(() => {
     };
   }, [skincareData]);
 
+  // Show initial loading while resolving params
   if (!resolvedSearchParams) {
     return (
       <div className="bg-gradient-to-br from-[#7772E7] via-[#9A68EB] to-[#D881F5F5] min-h-screen p-4 sm:p-6">
@@ -314,30 +175,13 @@ useEffect(() => {
     );
   }
 
-  // Polling status indicator
-  const PollingIndicator = () => {
-    const elapsedTime = Math.floor((Date.now() - startTimeRef.current) / 1000);
-    
-    return (
-      <div className="flex items-center gap-3 text-sm">
-        <RefreshCw className="w-4 h-4 text-blue-400 animate-spin" />
-        <span className="text-blue-400 font-medium">
-          Checking for your routine... ({pollingAttempt + 1}/{MAX_POLLING_ATTEMPTS})
-        </span>
-        <span className="text-blue-300">
-          {elapsedTime}s
-        </span>
-      </div>
-    );
-  };
-
   // Error state component
   const ErrorState = () => (
     <div className="bg-red-500/10 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-red-500/20">
       <div className="text-center">
         <AlertTriangle className="w-16 h-16 text-red-400 mx-auto mb-4" />
         <h2 className="text-2xl font-bold text-red-300 mb-4">
-          {loadingState === LoadingState.TIMEOUT ? 'Taking Longer Than Expected' : 'Something Went Wrong'}
+          Something Went Wrong
         </h2>
         <p className="text-red-200 mb-6 max-w-md mx-auto">{error}</p>
         
@@ -370,8 +214,8 @@ useEffect(() => {
     </div>
   );
 
-  // Show error or timeout state
-  if (loadingState === LoadingState.ERROR || loadingState === LoadingState.TIMEOUT) {
+  // Show error state
+  if (loadingState === LoadingState.ERROR) {
     return (
       <div className="bg-gradient-to-br from-[#7772E7] via-[#9A68EB] to-[#D881F5F5] min-h-screen p-4 sm:p-6">
         <div className="flex items-center justify-center p-4 mb-16">
@@ -384,8 +228,8 @@ useEffect(() => {
     );
   }
 
-  // Simple loading state - removed MultiStepLoader and 800ms delay
-  if (loadingState === LoadingState.POLLING || !showTransition) {
+  // Loading state
+  if (loadingState === LoadingState.LOADING) {
     return (
       <div className="bg-gradient-to-br from-[#7772E7] via-[#9A68EB] to-[#D881F5F5] min-h-screen p-4 sm:p-6">
         <div className="flex items-center justify-center p-4 mb-16">
@@ -399,16 +243,12 @@ useEffect(() => {
             </div>
             
             <h2 className="text-2xl font-bold text-white mb-4">
-              Crafting Your Perfect Routine
+              Loading Your Routine
             </h2>
             
             <p className="text-white/80 mb-6">
-              Our AI is analyzing your skin profile and matching you with the perfect products...
+              Fetching your personalized skincare routine...
             </p>
-            
-            <div className="bg-white/20 rounded-lg p-4">
-              <PollingIndicator />
-            </div>
           </div>
         </div>
       </div>
@@ -430,7 +270,6 @@ useEffect(() => {
             <div className="w-2 h-2 bg-green-400 rounded-full"></div>
             <span className="text-green-400 font-medium">Routine Ready</span>
           </div>
-          <span>Found after {pollingAttempt + 1} check{pollingAttempt !== 0 ? 's' : ''}</span>
         </div>
       </div>
 
@@ -634,4 +473,4 @@ useEffect(() => {
   );
 };
 
-export default SkincarePollingResults;
+export default SkincareResults;

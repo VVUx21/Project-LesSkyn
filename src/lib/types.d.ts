@@ -12,33 +12,6 @@ export interface ProductData {
   description: string;
 }
 
-export interface SkincareRoutine {
-  morningRoutine: {
-    step1Cleanser: RoutineStep;
-    step2Serum?: RoutineStep;
-    step3Moisturizer: RoutineStep;
-    step4Sunscreen: RoutineStep;
-  };
-  eveningRoutine: {
-    step1Cleanser: RoutineStep;
-    step2Treatment: RoutineStep;
-    step3Moisturizer: RoutineStep;
-    step4NightCare?: RoutineStep;
-  };
-  weeklyTreatments?: {
-    treatment: string;
-    frequency: string;
-    recommendedProducts: Array<{
-      productName: string;
-      productLink: string;
-      description: string;
-      price: number;
-      whyRecommended: string;
-    }>;
-  };
-  routineNotes: string[];
-}
-
 export interface GenerateRoutineRequest {
   skinType: string;
   skinConcern: string;
@@ -51,7 +24,6 @@ export interface GenerateRoutineRequest {
     max: number;
   };
 }
-
 
 export interface SkincareRoutineRequest {
   skinType: string;

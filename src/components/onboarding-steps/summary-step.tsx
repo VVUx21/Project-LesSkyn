@@ -197,11 +197,9 @@ const handleStreamingResponse = async (
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6));
-              
+
               if (data.type === 'metadata') {
                 console.log('📊 Metadata:', data.data);
-              } else if (data.type === 'partial') {
-                console.log('🔄 Progress:', data.accumulated, 'characters processed');
               } else if (data.type === 'complete') {
                 console.log('✅ Routine completed');
                 finalResult = data.data;
@@ -240,7 +238,7 @@ const handleStreamingResponse = async (
       totalProducts: 0,
       analyzedProducts: 0,
       cached: false
-     }
+    }
   };
 };
 
@@ -295,42 +293,6 @@ const handleGenerateRoutine = useCallback(async (useStreaming: boolean = true) =
     skinConcern: apiSkinConcern,
   });
 
-  if (apiSkinType === "Normal" && apiSkinConcern === "Anti-aging" && apiCommitment === "Minimal") {
-    try {
-      const controller = new AbortController();
-      await new Promise((resolve) => setTimeout(resolve, 15000));
-      const timeoutId = setTimeout(() => controller.abort(), 20000);
-
-      const res = await fetch(`/api/get-routine?${queryParams.toString()}`, {
-        method: "GET",
-        signal: controller.signal,
-        headers: { "Accept": "application/json" },
-      });
-
-      clearTimeout(timeoutId);
-
-      const json = await res.json();
-
-      if (!res.ok || !json?.success) {
-        throw new Error(json?.error || json?.message || "Routine not found");
-      }
-
-      // If your API returns processingTime in metadata, surface it in UI
-      if (json?.metadata?.processingTime != null) {
-        setProcessingTime(json.metadata.processingTime);
-      }
-
-      setIsGenerating(false);
-      router.push(`/skincare_routine?${queryParams.toString()}`);
-      return; // IMPORTANT: stop here; do not run the rest of the process
-    } catch (err: any) {
-      setError(err?.message || "Failed to fetch routine");
-      console.error("❌ Direct routine fetch failed:", err);
-      setIsGenerating(false);
-      return; // Do not continue to generation per your requirement
-    }
-  }
-
   // 2) Default path: use the existing generation flow
   try {
     const routine = await generateSkincareRoutine(useStreaming);
@@ -347,7 +309,6 @@ const handleGenerateRoutine = useCallback(async (useStreaming: boolean = true) =
     setIsGenerating(false);
   }
 }, [userProfile, router, generateSkincareRoutine]);
-
 
 const handleRetry = useCallback(() => {
   handleGenerateRoutine(false); // Use regular mode for retry

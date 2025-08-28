@@ -66,6 +66,7 @@ export function extractDescription($: any) {
 }
 
 import * as cheerio from 'cheerio';
+import { fetchAllProductsOptimized } from "./server/products.actions";
 
 export function extractIngredientsFromEmbeddedJson($: cheerio.CheerioAPI): string {
   let rawJson = '';
@@ -106,9 +107,6 @@ export const formatNumber = (num: number = 0) => {
   });
 };
 
-/**
- * Helper function to safely parse JSON (keeping your existing function)
- */
 export function cleanGeminiResponse(response: string): string {
   return response
     .replace(/```json\s*/g, "") // remove ```json
@@ -178,11 +176,9 @@ export function exportRoutineReport(
   const dateStr = date.toLocaleDateString();
   const timeStr = date.toLocaleTimeString();
 
-  // HTML encode helper
   const esc = (str?: string) =>
   (str ?? "").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-  // Routine section generator
   const renderRoutine = (label: string, steps: any[]) => `
     <h2>${label} Routine</h2>
     <ol>
@@ -222,7 +218,6 @@ export function exportRoutineReport(
     </ul>`
     : "";
 
-  // Do's and Don'ts
   const tipsHTML = `
     <div class="tips">
       <div>
@@ -288,3 +283,20 @@ export function exportRoutineReport(
   document.body.removeChild(a);
   URL.revokeObjectURL(url);
 }
+
+export function validateRequest(body: any): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  const required = ['skinType', 'skinConcern', 'commitmentLevel', 'preferredProducts']; 
+  
+  for (const field of required) {
+    if (!body[field] || typeof body[field] !== 'string' || body[field].trim() === '') {
+      errors.push(`${field} is required and must be a non-empty string`);
+    }
+  }
+   
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+

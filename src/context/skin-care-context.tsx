@@ -1,6 +1,7 @@
 // context/skin-care-context.tsx
 "use client"
 import React, { createContext, useContext, useReducer, useCallback } from 'react'
+import { SkincareData } from '@/lib/types'
 
 export type SkinType = "Feels tight, may have flaky patches, rarely gets oily" 
 | "Shiny appearance, enlarged pores, prone to breakouts" | "Oily T-zone (forehead, nose, chin) but dry cheeks" | "Well-balanced, not too oily or dry, few imperfections"
@@ -9,49 +10,6 @@ export type SkinConcern = "Pimples, blackheads, whiteheads, and clogged pores" |
  | "Sun spots, post-acne marks, melasma, uneven skin tone" | "Irritation, redness, reactivity to products"
 export type RoutineType = "A simple, no-fuss routine with just the essentials 3-4 steps" | "A balanced routine with targeted treatments 5-6 steps" | 
 "A complete routine for maximum results 7+ steps"
-
-// Types
-interface RoutineStep {
-  stepNumber: number;
-  stepName: string;
-  product: {
-    productName: string;
-    productLink: string;
-    description: string;
-    price: number;
-    currency: string;
-    source: string;
-  };
-  whyThisProduct: string;
-  howToUse: string;
-}
-
-interface SkincareRoutine {
-  morningRoutine: {
-    step1Cleanser: RoutineStep;
-    step2Serum?: RoutineStep;
-    step3Moisturizer: RoutineStep;
-    step4Sunscreen: RoutineStep;
-  };
-  eveningRoutine: {
-    step1Cleanser: RoutineStep;
-    step2Treatment: RoutineStep;
-    step3Moisturizer: RoutineStep;
-    step4NightCare?: RoutineStep;
-  };
-  weeklyTreatments?: {
-    treatment: string;
-    frequency: string;
-    recommendedProducts: Array<{
-      productName: string;
-      productLink: string;
-      description: string;
-      price: number;
-      whyRecommended: string;
-    }>;
-  };
-  routineNotes: string[];
-}
 
 interface RoutineMetadata {
   totalProducts: number;
@@ -70,7 +28,7 @@ interface UserProfile {
   faceScanImage?: string;
   
   // Enhanced fields for routine generation
-  generatedRoutine?: SkincareRoutine;
+  generatedRoutine?: SkincareData;
   routineGenerationHistory: Array<{
     timestamp: string;
     parameters: {
@@ -120,7 +78,7 @@ const initialUserProfile: UserProfile = {
 // Action types
 type SkinCareAction = 
   | { type: 'UPDATE_PROFILE'; payload: Partial<UserProfile> }
-  | { type: 'SET_GENERATED_ROUTINE'; payload: { routine: SkincareRoutine; metadata: RoutineMetadata } }
+  | { type: 'SET_GENERATED_ROUTINE'; payload: { routine: SkincareData; metadata: RoutineMetadata } }
   | { type: 'ADD_ROUTINE_HISTORY'; payload: UserProfile['routineGenerationHistory'][0] }
   | { type: 'UPDATE_PREFERENCES'; payload: Partial<UserProfile['preferences']> }
   | { type: 'INCREMENT_GENERATION_ATTEMPTS' }
@@ -200,7 +158,7 @@ function skinCareReducer(state: UserProfile, action: SkinCareAction): UserProfil
 interface SkinCareContextType {
   userProfile: UserProfile;
   updateUserProfile: (updates: Partial<UserProfile>) => void;
-  setGeneratedRoutine: (routine: SkincareRoutine, metadata: RoutineMetadata) => void;
+  setGeneratedRoutine: (routine: SkincareData, metadata: RoutineMetadata) => void;
   addRoutineHistory: (historyEntry: UserProfile['routineGenerationHistory'][0]) => void;
   updatePreferences: (preferences: Partial<UserProfile['preferences']>) => void;
   incrementGenerationAttempts: () => void;
@@ -260,7 +218,7 @@ export function SkinCareProvider({ children, persistKey = 'skincare_profile' }: 
     dispatch({ type: 'UPDATE_PROFILE', payload: updates });
   }, []);
 
-  const setGeneratedRoutine = useCallback((routine: SkincareRoutine, metadata: RoutineMetadata) => {
+  const setGeneratedRoutine = useCallback((routine: SkincareData, metadata: RoutineMetadata) => {
     dispatch({ type: 'SET_GENERATED_ROUTINE', payload: { routine, metadata } });
     dispatch({ type: 'COMPLETE_ONBOARDING' });
   }, []);

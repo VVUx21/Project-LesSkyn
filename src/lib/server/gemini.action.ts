@@ -2,7 +2,7 @@
 import { GoogleGenAI, Type } from "@google/genai";
 import { safetySettings } from "../Aiconfig";
 import { cleanGeminiResponse, findMatchingSkinProfile, extractKeyIngredients } from "../utils";
-import { ProductData, SkincareRoutine } from "../types";
+import { ProductData, SkincareData } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
@@ -14,13 +14,11 @@ async function* generateSkincareRoutineStream(
   preferredProducts: string
 ): AsyncGenerator<string, void, unknown> {
   try {
-    // Find matching skin profile from data
     console.log(skinType, skinConcern, commitmentLevel, preferredProducts);
     const matchingProfile = findMatchingSkinProfile(skinType, skinConcern, commitmentLevel, preferredProducts);
-    
+
     if (!matchingProfile) {
-      console.error("No matching skin profile found");
-      yield JSON.stringify({ error: "No matching skin profile found" });
+      yield JSON.stringify({ type: 'error', error: 'No matching skin profile found' });
       return;
     }
 
@@ -30,7 +28,6 @@ async function* generateSkincareRoutineStream(
     const amRoutineSteps = matchingProfile["Product Suggestion AM"]?.split('<br>') || [];
     const pmRoutineSteps = matchingProfile["Product Suggestion PM"]?.split('<br>') || [];
 
-    // Prepare products data for AI analysis
     const productsForAnalysis = products.map(p => ({
       title: p.title,
       url: p.url,
@@ -52,37 +49,36 @@ async function* generateSkincareRoutineStream(
             {
               text: `You are LesSkyn AI, an expert skincare routine creator. Analyze the available products and create a personalized 4-step morning and evening routine.
 
-                **USER PROFILE:**
-                - Skin Type: ${skinType}
-                - Primary Concern: ${skinConcern}
-                - Commitment Level: ${commitmentLevel}
-                - Preferred Products: ${preferredProducts}
+              **USER PROFILE:**
+              - Skin Type: ${skinType}
+              - Primary Concern: ${skinConcern}
+              - Commitment Level: ${commitmentLevel}
+              - Preferred Products: ${preferredProducts}
 
-                **ESSENTIAL INGREDIENTS TO PRIORITIZE:**
-                ${essentialIngredients.join('\n')}
+              **ESSENTIAL INGREDIENTS TO PRIORITIZE:**
+              ${essentialIngredients.join('\n')}
 
-                **ROUTINE STRUCTURE GUIDELINES:**
-                Morning Steps: ${amRoutineSteps.join(' → ')}
-                Evening Steps: ${pmRoutineSteps.join(' → ')}
+              **ROUTINE STRUCTURE GUIDELINES:**
+              Morning Steps: ${amRoutineSteps.join(' → ')}
+              Evening Steps: ${pmRoutineSteps.join(' → ')}
 
-                **WEEKLY TREATMENTS:** ${weeklyTreatments}
+              **WEEKLY TREATMENTS:** ${weeklyTreatments}
 
-                **BUDGET/PREFERENCE CONSTRAINTS:** ${otherSuggestions}
+              **BUDGET/PREFERENCE CONSTRAINTS:** ${otherSuggestions}
 
-                **AVAILABLE PRODUCTS:**
-                ${JSON.stringify(productsForAnalysis, null, 2)}
+              **AVAILABLE PRODUCTS:**
+              ${JSON.stringify(productsForAnalysis)}
 
-                **INSTRUCTIONS:**
-                1. Create EXACTLY 4 steps for both AM and PM routines
-                2. AM: Step 1 (Cleanser) → Step 2 (Serum/Treatment) → Step 3 (Facewash) → Step 4 (Moisturizer)
-                3. PM: Step 1 (Cleanser) → Step 2 (Serum/Treatment) → Step 3 (Facewash) → Step 4 (Moisturizer)
-                4. Match products based on their ingredients with the essential ingredients list
-                5. Consider price constraints from "Other Suggestion"
-                6. For each step, explain WHY this specific product is chosen and HOW to use it
-                7. Include weekly treatment recommendations if applicable
-                8. Provide general routine notes and tips
+              **INSTRUCTIONS:**
+              1. Create EXACTLY 4 steps for both AM and PM routines
+              2. AM: Step 1 (Cleanser) → Step 2 (Serum/Treatment) → Step 3 (Facewash) → Step 4 (Moisturizer)
+              3. PM: Step 1 (Cleanser) → Step 2 (Serum/Treatment) → Step 3 (Facewash) → Step 4 (Moisturizer)
+              4. Match products based on their ingredients with the essential ingredients list
+              5. For each step, explain WHY this specific product is chosen and HOW to use it
+              6. Include weekly treatment recommendations if applicable
+              7. Provide general routine notes and tips
 
-                Return ONLY valid JSON following the exact schema provided.`
+              Return ONLY valid JSON following the exact schema provided.`
             }
           ]
         }
@@ -91,6 +87,7 @@ async function* generateSkincareRoutineStream(
         tools: [],
         thinkingConfig: { thinkingBudget: 0 },
         safetySettings,
+        responseMimeType: "application/json",
         systemInstruction: {
           role: "system",
           parts: [
@@ -163,78 +160,32 @@ async function* generateSkincareRoutineStream(
       }
     });
 
-    let accumulatedResponse = '';
-    
-    // Stream the response chunks
+    // ---- ACCUMULATE JSON RESPONSE ----
+    let buffer = "";
+
     for await (const chunk of stream) {
       if (chunk?.text) {
-        //console.log('🤖 GEMINI CHUNK:', chunk.text.length, 'chars');
-        accumulatedResponse += chunk.text;
-        
-        // Try to parse partial JSON and yield valid chunks
-        try {
-          const cleanedChunk = cleanGeminiResponse(accumulatedResponse);
-          
-          // Check if we have a complete JSON object
-          if (isValidJSON(cleanedChunk)) {
-            const completeData = {
-              type: 'complete',
-              data: JSON.parse(cleanedChunk)
-            };
-            yield JSON.stringify(completeData);
-            return;
-          } else {
-            yield JSON.stringify({ 
-              type: 'partial',
-              chunk: chunk.text,
-              accumulated: accumulatedResponse.length
-            });
-          }
-        } catch (err) {
-          // Continue accumulating if JSON is not complete yet
-          yield JSON.stringify({ 
-            type: 'partial',
-            chunk: chunk.text,
-            accumulated: accumulatedResponse.length
-          });
-        }
+        buffer += chunk.text;
       }
     }
 
-    // Final processing
-    if (accumulatedResponse) {
-      try {
-        const cleanedResponse = cleanGeminiResponse(accumulatedResponse);
-        const parsedRoutine = JSON.parse(cleanedResponse);
-        yield JSON.stringify({ 
-          type: 'complete',
-          data: parsedRoutine
-        });
-      } catch (err) {
-        console.error("❌ Failed to parse final response:", err);
-        yield JSON.stringify({ 
-          type: 'error',
-          error: 'Failed to parse complete response'
-        });
-      }
-    }
+    // Defensive cleanup (in case the model ever wraps with code-fences)
+    const cleaned = buffer
+      .replace(/```json\s*/g, "")
+      .replace(/```/g, "")
+      .trim();
 
+    try {
+      const finalData = JSON.parse(cleaned);
+      yield JSON.stringify({ type: "complete", data: finalData });
+    } catch (err) {
+      console.error("❌ Failed to parse final response:", err);
+      // If you want an extra guard, you could try a repair step here (jsonrepair)
+      yield JSON.stringify({ type: "error", error: "Failed to parse complete response" });
+    }
   } catch (err) {
     console.error("Gemini request failed:", err);
-    yield JSON.stringify({ 
-      type: 'error',
-      error: 'Request failed'
-    });
-  }
-}
-
-// Helper function to check if a string is valid JSON
-function isValidJSON(str: string): boolean {
-  try {
-    JSON.parse(str);
-    return true;
-  } catch {
-    return false;
+    yield JSON.stringify({ type: "error", error: "Request failed" });
   }
 }
 
@@ -245,9 +196,9 @@ async function generateSkincareRoutine(
   skinConcern: string,
   commitmentLevel: string,
   preferredProducts: string
-): Promise<SkincareRoutine | null> {
+): Promise<SkincareData | null> {
   
-  let finalResult: SkincareRoutine | null = null;
+  let finalResult: SkincareData | null = null;
   
   try {
     const stream = generateSkincareRoutineStream(products, skinType, skinConcern, commitmentLevel, preferredProducts);

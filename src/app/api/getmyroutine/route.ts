@@ -1,53 +1,22 @@
+'use server';
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchAllProductsOptimized } from '@/lib/server/products.actions'; 
-import generateSkincareRoutine, { generateSkincareRoutineStream } from '@/lib/server/gemini.action'; 
-import { ProductData, GenerateRoutineRequest } from "../../../lib/types";
-import { saveRoutineToDatabase } from '@/lib/utils';
+import generateSkincareRoutine, { generateSkincareRoutineStream } from '@/lib/server/gemini.action';
+import { GenerateRoutineRequest } from "../../../lib/types";
+import { saveRoutineToDatabase, validateRequest } from '@/lib/utils';
+import { getCachedProducts } from '@/lib/server/products.actions';
+import { client as redis } from "@/lib/server/redis"; // Works with Upstash REST or ioredis
 
-let productsCache: {
-  data: ProductData[];
-  timestamp: number;
-  ttl: number;
-} | null = null;
+const cacheKeyFor = (skinType: string, skinConcern: string) =>
+  `routine:${skinType.trim()}:${skinConcern.trim()}`;
 
-const CACHE_TTL = 5 * 60 * 1000; 
-
-async function getCachedProducts(limit: number = 200): Promise<ProductData[]> {
-  const now = Date.now();
-
-  if (productsCache && (now - productsCache.timestamp) < productsCache.ttl) {
-    return productsCache.data;
+// parse cached value regardless of driver (Upstash REST returns objects; ioredis returns strings)
+function normalizeCached<T>(val: any): T | null {
+  if (val == null) return null;
+  if (typeof val === 'string') {
+    try { return JSON.parse(val) as T; } catch { return null; }
   }
-
-  const response = await fetchAllProductsOptimized(limit, 0);
-
-  if (!response.success) {
-    throw new Error(response.error || 'Failed to fetch products');
-  }
-
-  productsCache = {
-    data: response.products ?? [],
-    timestamp: now,
-    ttl: CACHE_TTL
-  };
-
-  return response.products ?? [];
-}
-
-function validateRequest(body: any): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  const required = ['skinType', 'skinConcern', 'commitmentLevel', 'preferredProducts']; 
-  
-  for (const field of required) {
-    if (!body[field] || typeof body[field] !== 'string' || body[field].trim() === '') {
-      errors.push(`${field} is required and must be a non-empty string`);
-    }
-  }
-   
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
+  // Upstash REST returns deserialized object directly
+  return val as T;
 }
 
 export async function POST(request: NextRequest) {
@@ -56,16 +25,13 @@ export async function POST(request: NextRequest) {
   const streaming = url.searchParams.get('stream') === 'true';
 
   try {
-    let body: GenerateRoutineRequest
+    // ---- Parse & validate body ----
+    let body: GenerateRoutineRequest;
     try {
       body = await request.json();
-    } catch (error) {
+    } catch {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Invalid JSON in request body',
-          processingTime: Date.now() - startTime
-        },
+        { success: false, error: 'Invalid JSON in request body', processingTime: Date.now() - startTime },
         { status: 400 }
       );
     }
@@ -73,12 +39,7 @@ export async function POST(request: NextRequest) {
     const validation = validateRequest(body);
     if (!validation.isValid) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'Validation failed', 
-          details: validation.errors,
-          processingTime: Date.now() - startTime
-        },
+        { success: false, error: 'Validation failed', details: validation.errors, processingTime: Date.now() - startTime },
         { status: 400 }
       );
     }
@@ -91,45 +52,98 @@ export async function POST(request: NextRequest) {
       limit = 200,
     } = body;
 
+    // ---- Fetch products (for your downstream logic & metadata) ----
     console.log('🔄 Fetching products...');
     const allProducts = await getCachedProducts(limit);
-
     if (allProducts.length === 0) {
       return NextResponse.json(
-        { 
-          success: false, 
-          error: 'No products available for routine generation',
-          processingTime: Date.now() - startTime
-        },
+        { success: false, error: 'No products available for routine generation', processingTime: Date.now() - startTime },
         { status: 404 }
       );
     }
 
-    // Handle streaming vs non-streaming
+    // ---- Cache check ----
+    const cacheKey = cacheKeyFor(skinType, skinConcern);
+    const cachedRaw = await redis.get(cacheKey);
+    const cachedRoutine = normalizeCached<any>(cachedRaw);
+
+    // ===== STREAMING (SSE) PATH =====
     if (streaming) {
       console.log('🌊 Starting streaming routine generation...');
-      
-      const stream = new ReadableStream({
-        async start(controller) {
-          const encoder = new TextEncoder();
-          let completeRoutineData: any = null;
-          
-          try {
-            // Send initial metadata
-            const metadata = {
+
+      // If cached → stream complete payload immediately and end
+      if (cachedRoutine) {
+        console.log("⚡ Cache hit (SSE):", cacheKey);
+
+        const stream = new ReadableStream({
+          async start(controller) {
+            const encoder = new TextEncoder();
+
+            // initial metadata
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
               type: 'metadata',
               data: {
                 totalProducts: allProducts.length,
                 analyzedProducts: allProducts.length,
                 startTime: Date.now(),
-                cached: productsCache ? (Date.now() - productsCache.timestamp) < CACHE_TTL : false
+                source: 'cache',
               }
-            };
-            
-            console.log('🚀 STREAMING START:', metadata);
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(metadata)}\n\n`));
+            })}\n\n`));
 
-            // Stream the routine generation
+            // complete payload from cache
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+              type: 'complete',
+              data: cachedRoutine
+            })}\n\n`));
+
+            // final metadata
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+              type: 'metadata',
+              data: { processingTime: Date.now() - startTime, completed: true }
+            })}\n\n`));
+
+            controller.close();
+          }
+        });
+
+        return new Response(stream, {
+          headers: {
+            'Content-Type': 'text/event-stream',
+            'Cache-Control': 'no-cache',
+            'Connection': 'keep-alive',
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Methods': 'POST',
+            'Access-Control-Allow-Headers': 'Content-Type',
+          },
+        });
+      }
+
+      // No cache → generate & stream
+      const stream = new ReadableStream({
+        async start(controller) {
+          const encoder = new TextEncoder();
+          const abortSignal = request.signal;
+          let completeRoutineData: any = null;
+
+          const onAbort = () => {
+            try { controller.close(); } catch {}
+            console.warn('🚪 Client disconnected (aborted SSE).');
+          };
+          abortSignal.addEventListener("abort", onAbort);
+
+          try {
+            // initial metadata
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
+              type: 'metadata',
+              data: {
+                totalProducts: allProducts.length,
+                analyzedProducts: allProducts.length,
+                startTime: Date.now(),
+                source: 'generation',
+              }
+            })}\n\n`));
+
+            // run the generator (now emits a single {type:'complete'} or {type:'error'})
             const routineStream = generateSkincareRoutineStream(
               allProducts,
               skinType,
@@ -139,108 +153,63 @@ export async function POST(request: NextRequest) {
             );
 
             for await (const chunk of routineStream) {
-              const data = JSON.parse(chunk);
-              
-              console.log('📦 STREAMING CHUNK:', data.type, data);
-              
-              controller.enqueue(encoder.encode(`data: ${chunk}\n\n`));
-              
-              if (data.type === 'complete') {
-                  completeRoutineData = data.data;
-                  
-                  const jsonString = JSON.stringify(data);
-                  const chunkSize = 1024; // 1KB chunks
-                  
-                  if (jsonString.length > chunkSize) {
-                    
-                    for (let i = 0; i < jsonString.length; i += chunkSize) {
-                      const chunk = jsonString.slice(i, i + chunkSize);
-                      const isLast = i + chunkSize >= jsonString.length;
-                      
-                      // Send each chunk with metadata
-                      const chunkData = {
-                        type: 'chunk',           
-                        data: chunk,             
-                        isComplete: isLast,    
-                        chunkIndex: Math.floor(i / chunkSize)
-                      };
-                      
-                      controller.enqueue(encoder.encode(`data: ${JSON.stringify(chunkData)}\n\n`));
-                    
-                      await new Promise(resolve => setTimeout(resolve, 10));
-                    }
-                    
-                    const finalSignal = { 
-                      type: 'complete_assembled'
-                    };
-                    controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalSignal)}\n\n`));
-                  } else {
-                    controller.enqueue(encoder.encode(`data: ${jsonString}\n\n`));
-                  }
+              let payload: any;
+              try {
+                payload = JSON.parse(chunk);
+              } catch {
+                const errMsg = { type: 'error', error: 'Malformed stream chunk' };
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(errMsg)}\n\n`));
+                break;
+              }
+
+              if (payload.type === 'complete') {
+                completeRoutineData = payload.data;
+
+                // emit complete
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+
+                // DB save (best effort)
                 try {
                   await saveRoutineToDatabase(
                     skinType,
                     skinConcern,
                     commitmentLevel,
-                    JSON.stringify(completeRoutineData) // Store as JSON string
+                    JSON.stringify(completeRoutineData)
                   );
-                  
-                  const saveConfirmation = {
-                    type: 'database_saved',
-                    message: 'Routine successfully saved to database'
-                  };
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(saveConfirmation)}\n\n`));
-                  
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'database_saved', message: 'Routine successfully saved to database' })}\n\n`));
                 } catch (dbError) {
                   console.error('❌ Database save error:', dbError);
-                  const dbErrorMessage = {
-                    type: 'database_error',
-                    error: 'Failed to save routine to database'
-                  };
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify(dbErrorMessage)}\n\n`));
+                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'database_error', error: 'Failed to save routine to database' })}\n\n`));
                 }
-                
-                const processingTime = Date.now() - startTime;
-                console.log('✅ STREAMING COMPLETE:', { processingTime, type: data.type });
-                
-                const finalMessage = {
+
+                // final metadata
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({
                   type: 'metadata',
-                  data: { processingTime, completed: true }
-                };
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(finalMessage)}\n\n`));
+                  data: { processingTime: Date.now() - startTime, completed: true }
+                })}\n\n`));
                 break;
               }
-              
-              if (data.type === 'error') {
-                if (completeRoutineData) {
-                  try {
-                    await saveRoutineToDatabase(
-                      skinType,
-                      skinConcern,
-                      'streaming_error',
-                      JSON.stringify({ error: data.error, partialData: completeRoutineData })
-                    );
-                  } catch (dbError) {
-                    console.error('❌ Database save error on stream error:', dbError);
-                  }
-                }
+
+              if (payload.type === 'error') {
+                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: payload.error || 'Stream error' })}\n\n`));
                 break;
               }
+
+              // unexpected type → forward and stop
+              controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
+              break;
             }
           } catch (error: any) {
             console.error('❌ STREAMING ERROR:', error);
-            const errorMessage = {
-              type: 'error',
-              error: error.message || 'Stream processing failed'
-            };
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify(errorMessage)}\n\n`));
+            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: error.message || 'Stream processing failed' })}\n\n`));
           } finally {
             console.log('🔚 STREAMING ENDED');
-            controller.close();
+            abortSignal.removeEventListener("abort", onAbort);
+            try { controller.close(); } catch {}
           }
         }
       });
-      
+
       return new Response(stream, {
         headers: {
           'Content-Type': 'text/event-stream',
@@ -251,79 +220,88 @@ export async function POST(request: NextRequest) {
           'Access-Control-Allow-Headers': 'Content-Type',
         },
       });
-    } else {
-      // Non-streaming (original behavior)
-      console.log('🤖 Generating skincare routine...');
-      const routine = await generateSkincareRoutine(
-        allProducts,
-        skinType,
-        skinConcern,
-        commitmentLevel,
-        preferredProducts
-      );
+    }
 
-      if (!routine) {
-        return NextResponse.json(
-          { 
-            success: false, 
-            error: 'Failed to generate routine',
-            processingTime: Date.now() - startTime
-          },
-          { status: 500 }
-        );
-      }
-
-      // Save to database
-      let savedDocument = null;
-      try {
-        savedDocument = await saveRoutineToDatabase(
-          skinType,
-          skinConcern,
-          'standard',
-          JSON.stringify(routine)
-        );
-      } catch (dbError) {
-        console.error('❌ Database save error:', dbError);
-        // Still return the routine even if database save fails
-      }
-
+    // ===== NON-STREAMING PATH =====
+    if (cachedRoutine) {
+      console.log("⚡ Cache hit (JSON):", cacheKey);
       const processingTime = Date.now() - startTime;
-      console.log(`✅ Routine generated successfully in ${processingTime}ms`);
 
       return NextResponse.json(
         {
           success: true,
-          data: routine,
-          databaseSaved: savedDocument !== null,
-          documentId: savedDocument?.$id,
+          data: cachedRoutine,
+          databaseSaved: false,
           metadata: {
             totalProducts: allProducts.length,
             analyzedProducts: allProducts.length,
             processingTime,
-            cached: productsCache ? (Date.now() - productsCache.timestamp) < CACHE_TTL : false
+            source: 'cache',
           }
         },
-        { 
+        {
           status: 200,
-          headers: {
-            'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600',
-          }
+          headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' }
         }
       );
     }
+
+    console.log('🤖 Generating skincare routine (non-streaming)...');
+    const routine = await generateSkincareRoutine(
+      allProducts,
+      skinType,
+      skinConcern,
+      commitmentLevel,
+      preferredProducts
+    );
+
+    if (!routine) {
+      return NextResponse.json(
+        { success: false, error: 'Failed to generate routine', processingTime: Date.now() - startTime },
+        { status: 500 }
+      );
+    }
+
+    // Save to database (best effort)
+    let savedDocument = null;
+    try {
+      savedDocument = await saveRoutineToDatabase(
+        skinType,
+        skinConcern,
+        'standard',
+        JSON.stringify(routine)
+      );
+    } catch (dbError) {
+      console.error('❌ Database save error:', dbError);
+    }
+
+    const processingTime = Date.now() - startTime;
+    console.log(`✅ Routine generated successfully in ${processingTime}ms`);
+
+    return NextResponse.json(
+      {
+        success: true,
+        data: routine,
+        databaseSaved: savedDocument !== null,
+        documentId: savedDocument?.$id,
+        metadata: {
+          totalProducts: allProducts.length,
+          analyzedProducts: allProducts.length,
+          processingTime,
+          source: 'generation',
+        }
+      },
+      {
+        status: 200,
+        headers: { 'Cache-Control': 'public, s-maxage=300, stale-while-revalidate=600' }
+      }
+    );
   } catch (error: any) {
     const processingTime = Date.now() - startTime;
     console.error('❌ Error in generate-routine API:', error);
-    
     return NextResponse.json(
-      { 
-        success: false, 
-        error: error.message || 'Internal server error',
-        processingTime
-      },
+      { success: false, error: error.message || 'Internal server error', processingTime },
       { status: 500 }
     );
   }
 }
-
-export const runtime = 'nodejs';

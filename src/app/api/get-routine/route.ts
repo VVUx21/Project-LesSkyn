@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createAdminClient } from '@/lib/server/appwrite'; // Adjust import path as needed
+import { createAdminClient } from '@/lib/server/appwrite';
 import { Query } from 'node-appwrite';
+import { client as redis } from '@/lib/server/redis'; // your Redis client file
 
 const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
-const COLLECTION_ID = process.env.APPWRITE_USERPROFILE_COLLECTION_ID!; // Your routines collection ID
+const COLLECTION_ID = process.env.APPWRITE_USERPROFILE_COLLECTION_ID!;
 
 interface RoutineDocument {
   $id: string;
@@ -11,7 +12,7 @@ interface RoutineDocument {
   skinType: string;
   skinConcern: string;
   routineType: string;
-  generatedRoutine?: string | null; // correct field
+  generatedRoutine?: string | null;
 }
 
 export async function GET(request: NextRequest) {
@@ -33,7 +34,25 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    console.log(`🔍 Searching for routine: skinType="${skinType}", skinConcern="${skinConcern}"`);
+    const cacheKey = `routine:${skinType.trim()}:${skinConcern.trim()}`;
+
+    const cached = await redis.get(cacheKey);
+    if (cached) {
+      console.log(`⚡ Cache hit for ${cacheKey}`);
+      return NextResponse.json(
+        {
+          success: true,
+          data: JSON.parse(cached),
+          metadata: {
+            source: "cache",
+            processingTime: Date.now() - startTime,
+          },
+        },
+        { status: 200 }
+      );
+    }
+
+    console.log(`🔍 Cache miss → querying Appwrite for ${cacheKey}`);
 
     const { database } = await createAdminClient();
     const response = await database.listDocuments(DATABASE_ID, COLLECTION_ID, [
@@ -44,7 +63,6 @@ export async function GET(request: NextRequest) {
     ]);
 
     if (response.documents.length === 0) {
-      console.log("❌ No routine found in database");
       return NextResponse.json(
         {
           success: false,
@@ -66,10 +84,8 @@ export async function GET(request: NextRequest) {
     };
 
     const rawData = routineDocument.generatedRoutine;
-    //console.log(rawData);
 
     if (!rawData || rawData.trim() === "") {
-      console.warn(`⚠️ Routine found but data is empty. Document ID: ${routineDocument.$id}`);
       return NextResponse.json(
         {
           success: false,
@@ -86,9 +102,10 @@ export async function GET(request: NextRequest) {
     }
 
     const routineData = JSON.parse(rawData);
-    //console.log("Routine data parsed successfully:", routineData);
 
-    console.log(`✅ Routine found! Document ID: ${routineDocument.$id}`);
+    await redis.set(cacheKey, JSON.stringify(routineData), "EX", 3600);
+
+    console.log(`✅ Routine cached under key ${cacheKey}`);
 
     return NextResponse.json(
       {
@@ -98,6 +115,7 @@ export async function GET(request: NextRequest) {
           documentId: routineDocument.$id,
           createdAt: routineDocument.$createdAt,
           routineType: routineDocument.routineType,
+          source: "database",
           processingTime: Date.now() - startTime,
         },
       },
@@ -120,5 +138,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-export const runtime = "nodejs";

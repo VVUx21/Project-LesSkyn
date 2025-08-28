@@ -1,27 +1,13 @@
 'use server';
 import { ID, Query } from "node-appwrite";
 import { createAdminClient} from "./appwrite";
+import { ProductData} from "../types";
+import { client } from '../server/redis'; // Adjust path as needed
 const {
   APPWRITE_DATABASE_ID: DATABASE_ID,
   APPWRITE_PRODUCTS_COLLECTION_ID: PRODUCTS_COLLECTION_ID,
 } = process.env;
 
-// ProductData interface
-interface ProductData {
-  url: string;
-  title: string;
-  currency: string;
-  currentPrice: number;
-  originalPrice: number;
-  discountRate: number;
-  category: string;
-  reviewsCount: number;
-  stars?: number;
-  image: string;
-  description: string;
-}
-
-// Response interfaces
 interface UploadResponse {
   success: boolean;
   error?: string;
@@ -35,7 +21,7 @@ export async function uploadProductData(productData: ProductData): Promise<Uploa
         error: 'Missing required fields: url, title, and currency are required'
       };
     }
-     const { database } = await createAdminClient();
+    const { database } = await createAdminClient();
     const document = await database.createDocument(
       DATABASE_ID!,
       PRODUCTS_COLLECTION_ID!,
@@ -76,12 +62,10 @@ interface FetchResponse {
   totalCount?: number;
 }
 
-// Enhanced version of fetchAllProducts with optimizations
 export async function fetchAllProductsOptimized(
   limit: number = 200,
   offset: number = 0,
   categories?: string[],
-  priceRange?: { min: number; max: number }
 ): Promise<FetchResponse> {
   try {
     const queries: string[] = [
@@ -95,11 +79,6 @@ export async function fetchAllProductsOptimized(
         Query.contains('category', category)
       );
       queries.push(Query.or(categoryQueries));
-    }
-
-    if (priceRange) {
-      queries.push(Query.greaterThanEqual('currentPrice', priceRange.min));
-      queries.push(Query.lessThanEqual('currentPrice', priceRange.max));
     }
 
     queries.push(Query.select([
@@ -174,3 +153,49 @@ export async function fetchAllProductsOptimized(
     };
   }
 }
+
+const CACHE_KEY = 'products_cache';
+const CACHE_TTL_SECONDS = Math.floor(6000000 / 1000); // Redis TTL in seconds (100 minutes)
+
+async function getCachedProducts(limit: number = 200): Promise<ProductData[]> {
+  try {
+    const cachedData = await client.get(CACHE_KEY);
+    
+    if (cachedData) {
+      const parsedData: ProductData[] = JSON.parse(cachedData);
+      console.log('Cache hit: Retrieved products from Redis');
+      return parsedData;
+    }
+
+    console.log('Cache miss: Fetching fresh data');
+    
+    // If not in cache, fetch from API
+    const response = await fetchAllProductsOptimized(limit, 0);
+
+    if (!response.success) {
+      throw new Error(response.error || 'Failed to fetch products');
+    }
+
+    const products = response.products ?? [];
+
+    // Store in Redis with TTL
+    await client.setex(CACHE_KEY, CACHE_TTL_SECONDS, JSON.stringify(products));
+    console.log('Data cached in Redis');
+
+    return products;
+  } catch (redisError) {
+    console.error('Redis error, falling back to in-memory cache:', redisError);
+  }
+  return [];
+}
+
+async function invalidateProductsCache(): Promise<void> {
+  try {
+    await client.del(CACHE_KEY);
+    console.log('Products cache invalidated');
+  } catch (error) {
+    console.error('Error invalidating cache:', error);
+  }
+}
+
+export { getCachedProducts, invalidateProductsCache };
