@@ -181,62 +181,124 @@ const handleStreamingResponse = async (
   }
 
   const reader = response.body?.getReader();
+  if (!reader) throw new Error('Readable stream not available');
+
   const decoder = new TextDecoder();
+  let buffer = '';            // text carried between reads
+  let eventLines: string[] = []; // lines for current SSE event
   let finalResult: any = null;
+  let clearedTimeout = false;
 
-  if (reader) {
-    try {
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-
-        const chunk = decoder.decode(value);
-        const lines = chunk.split('\n');
-
-        for (const line of lines) {
-          if (line.startsWith('data: ')) {
-            try {
-              const data = JSON.parse(line.slice(6));
-
-              if (data.type === 'metadata') {
-                console.log('📊 Metadata:', data.data);
-              } else if (data.type === 'complete') {
-                console.log('✅ Routine completed');
-                finalResult = data.data;
-                clearTimeout(timeoutId);
-                break;
-              } else if (data.type === 'error') {
-                throw new Error(data.error || 'Stream processing failed');
-              }
-            } catch (parseError) {
-              console.warn('Failed to parse streaming data:', line);
-            }
-          }
-        }
-
-        if (finalResult) break;
-      }
-    } finally {
-      reader.releaseLock();
+  const clearOnce = () => {
+    if (!clearedTimeout) {
+      clearTimeout(timeoutId);
+      clearedTimeout = true;
     }
+  };
+
+  const dispatchEvent = () => {
+    if (eventLines.length === 0) return;
+
+    // Per SSE spec, multiple data: lines concatenate with \n
+    const dataPayload = eventLines
+      .filter(l => l.startsWith('data:'))
+      .map(l => l.slice(5).trimStart())
+      .join('\n');
+
+    eventLines = [];
+
+    if (!dataPayload) return;
+    if (dataPayload === '[DONE]') return;
+
+    let parsed: any;
+    try {
+      parsed = JSON.parse(dataPayload);
+    } catch (e) {
+      console.warn('Failed to parse event payload (prefix):', dataPayload.slice(0, 200), '…');
+      return;
+    }
+
+    const { type, data, error } = parsed;
+
+    if (type === 'metadata') {
+      console.log('📊 Metadata:', data);
+    } else if (type === 'complete') {
+      console.log('✅ Routine completed');
+      finalResult = data;
+      clearOnce();
+    } else if (type === 'error') {
+      throw new Error(error || 'Stream processing failed');
+    } else {
+      // handle custom types here if needed
+    }
+  };
+
+  try {
+    while (true) {
+      const { done, value } = await reader.read();
+      const chunk = value ? decoder.decode(value, { stream: true }) : '';
+      buffer += chunk;
+
+      // Process complete lines; keep remainder in buffer
+      let idx: number;
+      while ((idx = buffer.indexOf('\n')) !== -1) {
+        let line = buffer.slice(0, idx);
+        if (line.endsWith('\r')) line = line.slice(0, -1); // tolerate CRLF
+        buffer = buffer.slice(idx + 1);
+
+        if (line === '') {
+          // blank line => end of one SSE event
+          dispatchEvent();
+          if (finalResult) break; // stop inner loop after dispatch if we’re done
+        } else if (line.startsWith(':')) {
+          // SSE comment/keepalive; ignore
+          continue;
+        } else {
+          eventLines.push(line);
+        }
+      }
+
+      if (finalResult) break;
+      if (done) {
+        // flush any trailing event (in case server forgot the final blank line)
+        if (eventLines.length) dispatchEvent();
+        break;
+      }
+    }
+  } finally {
+    try { reader.releaseLock(); } catch {}
   }
 
   if (!finalResult) {
     throw new Error('No complete routine received from stream');
   }
 
+  // Compute simple metadata if present
   const responseTime = Date.now() - startTime;
   setProcessingTime(responseTime);
+
+  // Example: derive product counts if your schema matches
+  let totalProducts = 0;
+  let analyzedProducts = 0;
+  try {
+    const sections = ['morning', 'evening'] as const;
+    for (const s of sections) {
+      if (Array.isArray(finalResult?.routine?.[s])) {
+        totalProducts += finalResult.routine[s].length;
+        analyzedProducts += finalResult.routine[s].filter((p: any) => !!p.reasoning).length;
+      }
+    }
+  } catch {}
 
   updateUserProfile({ generatedRoutine: finalResult });
 
   return {
     success: true,
     data: finalResult,
-    metadata: { 
+    metadata: {
       processingTime: responseTime,
-      totalProducts: 0,
-      analyzedProducts: 0,
+      totalProducts,
+      analyzedProducts,
       cached: false
     }
   };
