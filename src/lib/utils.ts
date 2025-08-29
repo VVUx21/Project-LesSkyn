@@ -2,9 +2,12 @@ import { clsx, type ClassValue } from "clsx"
 import { twMerge } from "tailwind-merge"
 import { z } from "zod";
 import data from "./data";
-import { createAdminClient } from '@/lib/server/appwrite'; // Add your Appwrite config import
+import { createAdminClient } from '@/lib/server/appwrite';
 import { ID } from 'node-appwrite';
 import { SkincareData, UserPreferences } from "@/lib/types";
+import * as cheerio from 'cheerio';
+const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
+const COLLECTION_ID = process.env.APPWRITE_USERPROFILE_COLLECTION_ID!; // Your routines collection ID
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
@@ -48,7 +51,6 @@ export function extractDescription($: any) {
   const selectors = [
     ".a-unordered-list .a-list-item",
     ".a-expander-content p",
-    // Add more selectors here if needed
   ];
 
   for (const selector of selectors) {
@@ -64,9 +66,6 @@ export function extractDescription($: any) {
 
   return "";
 }
-
-import * as cheerio from 'cheerio';
-import { fetchAllProductsOptimized } from "./server/products.actions";
 
 export function extractIngredientsFromEmbeddedJson($: cheerio.CheerioAPI): string {
   let rawJson = '';
@@ -107,16 +106,6 @@ export const formatNumber = (num: number = 0) => {
   });
 };
 
-export function cleanGeminiResponse(response: string): string {
-  return response
-    .replace(/```json\s*/g, "") // remove ```json
-    .replace(/```/g, "")        // remove ```
-    .replace(/\n/g, " ")        // normalize newlines
-    .replace(/,\s*}/g, "}")     // remove trailing commas before }
-    .replace(/,\s*]/g, "]")     // remove trailing commas before ]
-    .trim();
-}
-
 export function findMatchingSkinProfile(skinType: string, skinConcern: string, commitmentLevel: string, preferredProducts: string) {
   return data.find(profile => 
     profile["Skin type"] === skinType &&
@@ -134,8 +123,7 @@ export function extractKeyIngredients(profile: any): string[] {
     .map((ingredient: string) => ingredient.trim())
     .filter((ingredient: string) => ingredient.length > 0);
 }
-const DATABASE_ID = process.env.APPWRITE_DATABASE_ID!;
-const COLLECTION_ID = process.env.APPWRITE_USERPROFILE_COLLECTION_ID!; // Your routines collection ID
+
 // Function to save routine to Appwrite
 export async function saveRoutineToDatabase(
   skinType: string,
@@ -284,19 +272,13 @@ export function exportRoutineReport(
   URL.revokeObjectURL(url);
 }
 
-export function validateRequest(body: any): { isValid: boolean; errors: string[] } {
+export const validateRequest = (body: any): { isValid: boolean; errors: string[] } => {
   const errors: string[] = [];
-  const required = ['skinType', 'skinConcern', 'commitmentLevel', 'preferredProducts']; 
-  
+  const required = ['skinType', 'skinConcern', 'commitmentLevel', 'preferredProducts'];
   for (const field of required) {
     if (!body[field] || typeof body[field] !== 'string' || body[field].trim() === '') {
       errors.push(`${field} is required and must be a non-empty string`);
     }
   }
-   
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
+  return { isValid: errors.length === 0, errors };
+};

@@ -82,24 +82,21 @@ export async function signin({ email_id, password }: signInProps) {
   try {
     const { account } = await createAdminClient();
     
-    // Create session
     const session = await account.createEmailPasswordSession(email_id, password);
     
-    // Set cookie
     (await cookies()).set("appwrite-session", session.secret, {
       path: "/",
       httpOnly: true,
       sameSite: "strict",
-      secure: process.env.NODE_ENV === 'production', // Only secure in production
+      secure: process.env.NODE_ENV === 'production',
     });
     
-    // Get user info from database
     const user = await getUserInfo({ userId: session.userId });
     
     return parseStringify(user);
   } catch (error) {
     console.error('Signin error:', error);
-    throw error; // Throw error so UI can handle it
+    throw error; 
   }
 }
 
@@ -117,8 +114,7 @@ export async function signup({ password, ...userData }: SignUpParams) {
   
   try {
     const { account, database } = await createAdminClient();
-    
-    // Step 1: Create Appwrite account
+
     userAccount = await account.create(
       ID.unique(), 
       email_id, 

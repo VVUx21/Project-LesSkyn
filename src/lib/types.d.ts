@@ -52,7 +52,6 @@ export interface SkincareRoutineResponse {
   processingTime?: number;
 }
 
-// Types
 export interface RoutineStep {
   step: number;
   product_name: string;

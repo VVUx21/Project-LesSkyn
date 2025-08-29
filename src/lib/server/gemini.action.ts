@@ -1,7 +1,7 @@
 'use server';
 import { GoogleGenAI, Type } from "@google/genai";
 import { safetySettings } from "../Aiconfig";
-import { cleanGeminiResponse, findMatchingSkinProfile, extractKeyIngredients } from "../utils";
+import { findMatchingSkinProfile, extractKeyIngredients } from "../utils";
 import { ProductData, SkincareData } from "../types";
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
@@ -160,7 +160,6 @@ async function* generateSkincareRoutineStream(
       }
     });
 
-    // ---- ACCUMULATE JSON RESPONSE ----
     let buffer = "";
 
     for await (const chunk of stream) {
@@ -169,7 +168,6 @@ async function* generateSkincareRoutineStream(
       }
     }
 
-    // Defensive cleanup (in case the model ever wraps with code-fences)
     const cleaned = buffer
       .replace(/```json\s*/g, "")
       .replace(/```/g, "")
@@ -180,7 +178,7 @@ async function* generateSkincareRoutineStream(
       yield JSON.stringify({ type: "complete", data: finalData });
     } catch (err) {
       console.error("❌ Failed to parse final response:", err);
-      // If you want an extra guard, you could try a repair step here (jsonrepair)
+      //try a repair step here (jsonrepair) for a extra guard if required...
       yield JSON.stringify({ type: "error", error: "Failed to parse complete response" });
     }
   } catch (err) {

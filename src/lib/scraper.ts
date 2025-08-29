@@ -1,5 +1,4 @@
 "use server"
-
 import axios from 'axios';
 import * as cheerio from 'cheerio';
 import { extractCurrency, extractDescription, extractPrice, extractIngredientsFromEmbeddedJson } from '../lib/utils';
@@ -19,8 +18,6 @@ const username = String(process.env.BRIGHT_DATA_USERNAME);
     rejectUnauthorized: false,
   }
 
-// curl -i --proxy brd.superproxy.io:33335 --proxy-user 
-// brd-customer-hl_31f01b05-zone-lessskyn:03sz4lqn8i10 -k "https://geo.brdtest.com/welcome.txt?product=unlocker&method=native"
 export async function scrapeAmazonProduct(url: string,category:string) {
   if(!url) return;
 

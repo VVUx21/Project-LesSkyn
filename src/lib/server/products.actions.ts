@@ -2,7 +2,7 @@
 import { ID, Query } from "node-appwrite";
 import { createAdminClient} from "./appwrite";
 import { ProductData} from "../types";
-import { client } from '../server/redis'; // Adjust path as needed
+import { client } from '../server/redis';
 const {
   APPWRITE_DATABASE_ID: DATABASE_ID,
   APPWRITE_PRODUCTS_COLLECTION_ID: PRODUCTS_COLLECTION_ID,
@@ -25,7 +25,7 @@ export async function uploadProductData(productData: ProductData): Promise<Uploa
     const document = await database.createDocument(
       DATABASE_ID!,
       PRODUCTS_COLLECTION_ID!,
-      ID.unique(), // Auto-generate document ID
+      ID.unique(),
       {
         url: productData.url,
         title: productData.title,
@@ -97,14 +97,12 @@ export async function fetchAllProductsOptimized(
 
     console.log(`🔍 Executing database query with ${queries.length} conditions`);
     const {database} = await createAdminClient();
-    // Execute the query
     const response = await database.listDocuments(
       DATABASE_ID!,
       PRODUCTS_COLLECTION_ID!,
       queries
     );
 
-    // Transform documents to ProductData format
     const products: ProductData[] = response.documents.map((doc: any) => ({
       url: doc.url || '',
       title: doc.title || '',
@@ -169,7 +167,6 @@ async function getCachedProducts(limit: number = 200): Promise<ProductData[]> {
 
     console.log('Cache miss: Fetching fresh data');
     
-    // If not in cache, fetch from API
     const response = await fetchAllProductsOptimized(limit, 0);
 
     if (!response.success) {
@@ -178,7 +175,6 @@ async function getCachedProducts(limit: number = 200): Promise<ProductData[]> {
 
     const products = response.products ?? [];
 
-    // Store in Redis with TTL
     await client.setex(CACHE_KEY, CACHE_TTL_SECONDS, JSON.stringify(products));
     console.log('Data cached in Redis');
 
