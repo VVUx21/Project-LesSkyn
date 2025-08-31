@@ -20,7 +20,7 @@ const cacheKeyFor = (skinType: string, skinConcern: string) =>
   `routine:${skinType.trim()}:${skinConcern.trim()}`;
 
 const routineratelimit = rateLimiter({
-  windowInSeconds: 60,
+  windowInSeconds: 300,
   maxRequests: 5
 });
 

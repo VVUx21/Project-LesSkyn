@@ -26,7 +26,7 @@ export const rateLimiter = (config: RateLimitConfig): MiddlewareHandler => {
       return c.json(
         { 
           success: false,
-          error: 'Rate limit exceeded. Please try again later.'
+          error: `You have exceeded the maximum of 5 requests in 5 minutes. Please wait before trying again.`
         },
         429
       );
