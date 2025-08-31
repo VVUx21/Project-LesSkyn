@@ -4,6 +4,7 @@ import generateSkincareRoutine, { generateSkincareRoutineStream } from '@/lib/se
 import { saveRoutineToDatabase,validateRequest } from '@/lib/utils';
 import { client as redis } from "@/lib/server/redis";
 import { GenerateRoutineRequest } from "@/lib/types";
+import { rateLimiter } from './ratelimiter';
 
 const getMyRoutine = new Hono();
 
@@ -18,7 +19,12 @@ const normalizeCached = <T>(val: any): T | null => {
 const cacheKeyFor = (skinType: string, skinConcern: string) =>
   `routine:${skinType.trim()}:${skinConcern.trim()}`;
 
-getMyRoutine.post('/getmyroutine', async (c) => {
+const routineratelimit = rateLimiter({
+  windowInSeconds: 60,
+  maxRequests: 5
+});
+
+getMyRoutine.post('/getmyroutine', routineratelimit, async (c) => {
   const startTime = Date.now();
   const url = new URL(c.req.url);
   const streaming = url.searchParams.get('stream') === 'true';
