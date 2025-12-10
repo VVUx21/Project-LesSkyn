@@ -24,12 +24,11 @@ export default function Contact() {
           {/* Conference Details */}
           <div className="flex flex-col items-center ml-36 md:items-start text-center md:text-left mb-6">
             <Image
-              src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755003537/Group_6_n0fihn.png"
+              src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351375/Frame_1430103067_dfzogg.png"
               alt="CVMI-2025 Logo"
               width={150}
               height={150}
             />
-            <h2 className="text-4xl font-bold text-[#FBFAFF] mt-4 ml-5">LesSkyn</h2>
           </div>
 
           {/* Navigation Menu */}
@@ -39,7 +38,7 @@ export default function Contact() {
           {
             ['scrape_products'].map((item, index) => {
                 return <li key={index} className='text-[12px] sm:text-[20px]  hover:scale-105 2xl:text-[25px] font-archivo font-semibold mb-2 flex items-center gap-3'>
-                   <a href={`/${item}`}>{item}</a>
+                  <a href={`/${item}`}>Scrape Products</a>
                   <ArrowRightIcon
                     className='sm:w-[18px] w-2 h-2'
                     aria-label="icon"

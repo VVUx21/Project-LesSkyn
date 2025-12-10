@@ -28,10 +28,10 @@ export default function LandingPage() {
               TAKE YOUR SKIN QUIZ
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-              className="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
+                className="h-5 w-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
               <path
                 fillRule="evenodd"
                 d="M10.293 3.293a1 1 0 011.414 0l6 6a1 1 0 010 1.414l-6 6a1 1 0 01-1.414-1.414L14.586 11H3a1 1 0 110-2h11.586l-4.293-4.293a1 1 0 010-1.414z"
@@ -45,7 +45,7 @@ export default function LandingPage() {
         {/* Right Column: Illustration */}
         <div className="flex items-center justify-center">
           <Image
-            src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755002562/a1eea312cc7afd3fbbf90557ebb70ade153ec231_bufwj8.png" // Make sure this image is in your /public folder
+            src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351042/natural-skin-care-illustration-download-in-svg-png-gif-file-formats--product-herbal-cosmetic-pack-beauty-illustrations-7974584_1_1_icchze.png" // Make sure this image is in your /public folder
             alt="Woman applying skincare products surrounded by flowers and leaves"
             width={900}
             height={900}
@@ -78,7 +78,7 @@ export default function LandingPage() {
         </div>
       </div>
       <Image
-          src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755006737/man-applying-cream-on-face-for-facial-skin-treatment-concept-illustration-vector_1_mirhoh.png"
+          src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351041/man-applying-cream-on-face-for-facial-skin-treatment-concept-illustration-vector_1_tghwmj.png"
           alt="Decorative Background"
           height={400}
           width={400}
@@ -87,7 +87,7 @@ export default function LandingPage() {
       </div>
       <div className="flex flex-row justify-end mr-44 mt-16 w-full">
         <Image
-            src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755010558/skin-care-and-treatment-5508417-4583564_1_ccyijz.png"
+            src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351041/skin-care-and-treatment-5508417-4583564_1_rrscy8.png"
             alt="Decorative Background"
             height={400}
             width={400}
@@ -136,7 +136,7 @@ export default function LandingPage() {
           </div>
         </div>
               <Image
-                  src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755010600/facial-skin-treatment-8395272-6715534_1_liuhsm.png"
+                  src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351041/facial-skin-treatment-8395272-6715534_1_phj7mq.png"
                   alt="Decorative Background"
                   height={400}
                   width={400}
@@ -145,7 +145,7 @@ export default function LandingPage() {
           </div>
       <div className="flex flex-row justify-end mr-44 mt-16 w-full">
         <Image
-            src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755010617/natural-skin-care-illustration-download-in-svg-png-gif-file-formats--product-herbal-cosmetic-pack-beauty-illustrations-7974588_1_r67hfz.png"
+            src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351041/natural-skin-care-illustration-download-in-svg-png-gif-file-formats--product-herbal-cosmetic-pack-beauty-illustrations-7974588_1_tncmot.png"
             alt="Decorative Background"
             height={500}
             width={500}

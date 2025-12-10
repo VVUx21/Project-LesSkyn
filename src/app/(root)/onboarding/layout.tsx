@@ -19,7 +19,7 @@ export default function OnboardingLayout({
             {children}
         </div>
         <Image
-        src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755124069/image_26_ruzboq.png"
+        src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351041/image_26_rq4onk.png"
         alt="Onboarding Background"
         className="absolute bottom-0 left-0 z-0"
         width={400}

@@ -1,8 +1,9 @@
 import { Hono } from 'hono';
 import { getCachedProducts } from '@/lib/server/products.actions';
-import generateSkincareRoutine, { generateSkincareRoutineStream } from '@/lib/server/gemini.action';
-import { saveRoutineToDatabase,validateRequest } from '@/lib/utils';
+import { generateSkincareRoutineStream } from '@/lib/server/openai.action';
+import { saveRoutineToDatabase, validateRequest } from '@/lib/utils';
 import { client as redis } from "@/lib/server/redis";
+import { realtime, createStreamSession, updateStreamSession } from "@/lib/server/upstash";
 import { GenerateRoutineRequest } from "@/lib/types";
 import { rateLimiter } from './ratelimiter';
 
@@ -24,232 +25,172 @@ const routineratelimit = rateLimiter({
   maxRequests: 5
 });
 
-getMyRoutine.post('/getmyroutine', routineratelimit, async (c) => {
+// ===== REALTIME STREAMING ENDPOINT =====
+// Uses Upstash Redis channels for real-time updates (like the workflow pattern)
+getMyRoutine.post('/getmyroutine/realtime', routineratelimit, async (c) => {
   const startTime = Date.now();
-  const url = new URL(c.req.url);
-  const streaming = url.searchParams.get('stream') === 'true';
 
   try {
-    let body: GenerateRoutineRequest;
+    let body: GenerateRoutineRequest & { sessionId: string };
     try {
       body = await c.req.json();
     } catch {
-      return c.json({
-        success: false,
-        error: 'Invalid JSON in request body',
-        processingTime: Date.now() - startTime
-      }, 400);
+      return c.json({ success: false, error: 'Invalid JSON' }, 400);
+    }
+
+    const { sessionId, skinType, skinConcern, commitmentLevel, preferredProducts, limit = 200 } = body;
+
+    if (!sessionId) {
+      return c.json({ success: false, error: 'sessionId is required for realtime streaming' }, 400);
     }
 
     const validation = validateRequest(body);
     if (!validation.isValid) {
-      return c.json({
-        success: false,
-        error: 'Validation failed',
-        details: validation.errors,
-        processingTime: Date.now() - startTime
-      }, 400);
+      return c.json({ success: false, error: 'Validation failed', details: validation.errors }, 400);
     }
 
-    const {
+    // Create the realtime channel for this session
+    const channel = realtime.channel(sessionId);
+
+    // Clear any previous messages
+    await channel.clear();
+
+    // Create stream session metadata
+    await createStreamSession(sessionId, {
       skinType,
       skinConcern,
       commitmentLevel,
       preferredProducts,
-      limit = 200,
-    } = body;
+      startTime
+    });
 
-    console.log('🔄 Fetching products...');
+    // Emit initial status
+    await channel.emit('ai.status', { 
+      type: 'started', 
+      message: 'Fetching products...',
+      timestamp: Date.now()
+    });
+
+    // Fetch products
     const allProducts = await getCachedProducts(limit);
     if (allProducts.length === 0) {
-      return c.json({
-        success: false,
-        error: 'No products available for routine generation',
-        processingTime: Date.now() - startTime
-      }, 404);
+      await channel.emit('ai.error', { error: 'No products available' });
+      return c.json({ success: false, error: 'No products available' }, 404);
     }
 
+    await channel.emit('ai.status', { 
+      type: 'products_loaded', 
+      message: `Loaded ${allProducts.length} products`,
+      totalProducts: allProducts.length 
+    });
+
+    // Check cache first
     const cacheKey = cacheKeyFor(skinType, skinConcern);
     const cachedRaw = await redis.get(cacheKey);
     const cachedRoutine = normalizeCached<any>(cachedRaw);
 
-    if (streaming) {
-      if (cachedRoutine) {
-        console.log("⚡ Cache hit (SSE):", cacheKey);
-        const stream = new ReadableStream({
-          start(controller) {
-            const encoder = new TextEncoder();
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-              type: 'metadata',
-              data: {
-                totalProducts: allProducts.length,
-                analyzedProducts: allProducts.length,
-                startTime: Date.now(),
-                source: 'cache',
-              }
-            })}\n\n`));
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-              type: 'complete',
-              data: cachedRoutine
-            })}\n\n`));
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-              type: 'metadata',
-              data: { processingTime: Date.now() - startTime, completed: true }
-            })}\n\n`));
-            controller.close();
-          }
+    if (cachedRoutine) {
+      await channel.emit('ai.status', { type: 'cache_hit', message: 'Found cached routine' });
+      await channel.emit('ai.complete', { 
+        routine: cachedRoutine, 
+        cached: true,
+        processingTime: Date.now() - startTime 
+      });
+      await updateStreamSession(sessionId, { status: 'completed', cached: true });
+      return c.json({ success: true, sessionId, cached: true });
+    }
+
+    // Start AI generation
+    await channel.emit('ai.status', { 
+      type: 'generating', 
+      message: 'AI is analyzing products and creating your routine...' 
+    });
+
+    // Run the AI generation and emit chunks to channel
+    const routineStream = generateSkincareRoutineStream(
+      allProducts,
+      skinType,
+      skinConcern,
+      commitmentLevel,
+      preferredProducts
+    );
+
+    let completeRoutineData: any = null;
+
+    for await (const chunk of routineStream) {
+      let payload: any;
+      try {
+        payload = JSON.parse(chunk);
+      } catch {
+        await channel.emit('ai.error', { error: 'Malformed stream chunk' });
+        break;
+      }
+
+      if (payload.type === 'progress') {
+        await channel.emit('ai.chunk', { 
+          type: 'progress',
+          chunksReceived: payload.data.chunksReceived,
+          bufferSize: payload.data.bufferSize
+        });
+      } else if (payload.type === 'complete') {
+        completeRoutineData = payload.data;
+        
+        // Emit the complete routine
+        await channel.emit('ai.complete', { 
+          routine: completeRoutineData,
+          cached: false,
+          processingTime: Date.now() - startTime
         });
 
-        c.header('Content-Type', 'text/event-stream');
-        c.header('Cache-Control', 'no-cache');
-        c.header('Connection', 'keep-alive');
-        c.header('Access-Control-Allow-Origin', '*');
-        return c.body(stream);
-      }
-
-      const stream = new ReadableStream({
-        async start(controller) {
-          const encoder = new TextEncoder();
-          const abortSignal = c.req.raw.signal;
-          let completeRoutineData: any = null;
-
-          const onAbort = () => {
-            try { controller.close(); } catch {}
-            console.warn('🚪 Client disconnected (aborted SSE).');
-          };
-          abortSignal.addEventListener("abort", onAbort);
-
-          try {
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-              type: 'metadata',
-              data: {
-                totalProducts: allProducts.length,
-                analyzedProducts: allProducts.length,
-                startTime: Date.now(),
-                source: 'generation',
-              }
-            })}\n\n`));
-
-            const routineStream = generateSkincareRoutineStream(
-              allProducts,
-              skinType,
-              skinConcern,
-              commitmentLevel,
-              preferredProducts
-            );
-
-            for await (const chunk of routineStream) {
-              let payload: any;
-              try {
-                payload = JSON.parse(chunk);
-              } catch {
-                const errMsg = { type: 'error', error: 'Malformed stream chunk' };
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(errMsg)}\n\n`));
-                break;
-              }
-
-              if (payload.type === 'complete') {
-                completeRoutineData = payload.data;
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
-                try {
-                  await saveRoutineToDatabase(skinType, skinConcern, commitmentLevel, JSON.stringify(completeRoutineData));
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'database_saved', message: 'Routine successfully saved to database' })}\n\n`));
-                } catch (dbError) {
-                  console.error('❌ Database save error:', dbError);
-                  controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'database_error', error: 'Failed to save routine to database' })}\n\n`));
-                }
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({
-                  type: 'metadata',
-                  data: { processingTime: Date.now() - startTime, completed: true }
-                })}\n\n`));
-                break;
-              }
-
-              if (payload.type === 'error') {
-                controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: payload.error || 'Stream error' })}\n\n`));
-                break;
-              }
-              controller.enqueue(encoder.encode(`data: ${JSON.stringify(payload)}\n\n`));
-              break;
-            }
-          } catch (error: any) {
-            console.error('❌ STREAMING ERROR:', error);
-            controller.enqueue(encoder.encode(`data: ${JSON.stringify({ type: 'error', error: error.message || 'Stream processing failed' })}\n\n`));
-          } finally {
-            console.log('🔚 STREAMING ENDED');
-            abortSignal.removeEventListener("abort", onAbort);
-            try { controller.close(); } catch {}
-          }
+        // Save to database
+        try {
+          await saveRoutineToDatabase(skinType, skinConcern, commitmentLevel, JSON.stringify(completeRoutineData));
+          await redis.set(cacheKey, JSON.stringify(completeRoutineData), "EX", 3600);
+          await channel.emit('ai.status', { type: 'saved', message: 'Routine saved successfully' });
+        } catch (dbError) {
+          console.error('❌ Database save error:', dbError);
+          await channel.emit('ai.warning', { message: 'Failed to save routine to database' });
         }
-      });
-      c.header('Content-Type', 'text/event-stream');
-      c.header('Cache-Control', 'no-cache');
-      c.header('Connection', 'keep-alive');
-      c.header('Access-Control-Allow-Origin', '*');
-      return c.body(stream);
-    }
 
-    // ===== NON-STREAMING PATH =====
-    if (cachedRoutine) {
-      console.log("⚡ Cache hit (JSON):", cacheKey);
-      const processingTime = Date.now() - startTime;
-      c.header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
-      return c.json({
-        success: true,
-        data: cachedRoutine,
-        databaseSaved: false,
-        metadata: {
-          totalProducts: allProducts.length,
-          analyzedProducts: allProducts.length,
-          processingTime,
-          source: 'cache',
-        }
-      }, 200);
-    }
-
-    console.log('🤖 Generating skincare routine (non-streaming)...');
-    const routine = await generateSkincareRoutine(allProducts, skinType, skinConcern, commitmentLevel, preferredProducts);
-
-    if (!routine) {
-      return c.json({
-        success: false,
-        error: 'Failed to generate routine',
-        processingTime: Date.now() - startTime
-      }, 500);
-    }
-
-    let savedDocument = null;
-    try {
-      savedDocument = await saveRoutineToDatabase(skinType, skinConcern, 'standard', JSON.stringify(routine));
-      await redis.set(cacheKey, JSON.stringify(routine), "EX", 3600);
-    } catch (dbError) {
-      console.error('❌ Database save error:', dbError);
-    }
-
-    const processingTime = Date.now() - startTime;
-    console.log(`✅ Routine generated successfully in ${processingTime}ms`);
-
-    c.header('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
-    return c.json({
-      success: true,
-      data: routine,
-      databaseSaved: savedDocument !== null,
-      documentId: savedDocument?.$id,
-      metadata: {
-        totalProducts: allProducts.length,
-        analyzedProducts: allProducts.length,
-        processingTime,
-        source: 'generation',
+        await updateStreamSession(sessionId, { status: 'completed', cached: false });
+        break;
+      } else if (payload.type === 'error') {
+        await channel.emit('ai.error', { error: payload.error });
+        await updateStreamSession(sessionId, { status: 'error', error: payload.error });
+        break;
       }
-    }, 200);
+    }
+
+    return c.json({ 
+      success: true, 
+      sessionId,
+      message: 'Generation started. Listen to channel for updates.'
+    });
+
   } catch (error: any) {
-    const processingTime = Date.now() - startTime;
-    console.error('❌ Error in generate-routine API:', error);
-    return c.json({
-      success: false,
-      error: error.message || 'Internal server error',
-      processingTime
-    }, 500);
+    console.error('❌ Realtime generation error:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Endpoint to poll for channel messages (for clients that can't use SSE)
+getMyRoutine.get('/getmyroutine/channel/:sessionId', async (c) => {
+  const sessionId = c.req.param('sessionId');
+  
+  if (!sessionId) {
+    return c.json({ success: false, error: 'sessionId is required' }, 400);
+  }
+
+  try {
+    const channel = realtime.channel(sessionId);
+    const messages = await channel.getMessages(50);
+    
+    return c.json({ 
+      success: true, 
+      messages: messages.reverse() // Return in chronological order
+    });
+  } catch (error: any) {
+    return c.json({ success: false, error: error.message }, 500);
   }
 });
 

@@ -55,7 +55,7 @@ const Navbar = () => {
               <div className="flex items-center gap-2">
                 <Link href="/">
                   <Image
-                    src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755003537/Group_6_n0fihn.png"
+                    src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351041/Group_27_tzjtss.png"
                     alt="Top Image"
                     width={30}
                     height={30}

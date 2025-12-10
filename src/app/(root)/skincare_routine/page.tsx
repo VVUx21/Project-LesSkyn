@@ -1,15 +1,22 @@
 "use client"
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { useRouter} from 'next/navigation';
-import {SkincareData, UserPreferences } from '@/lib/types';
-import { ChevronRight, Download, Home, RotateCcw, AlertTriangle, RefreshCw } from 'lucide-react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { SkincareData, UserPreferences, RoutineStep } from '@/lib/types';
+import { ChevronRight, Download, Home, RotateCcw, AlertTriangle, RefreshCw, Sparkles } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import { exportRoutineReport } from '@/lib/utils';
 
 enum LoadingState {
   LOADING = 'loading',
+  STREAMING = 'streaming',
   COMPLETED = 'completed',
   ERROR = 'error'
+}
+
+interface StreamMessage {
+  event: string;
+  data: any;
+  timestamp: number;
 }
 
 interface PageProps {
@@ -25,6 +32,10 @@ function SkincareResults({
   const [skincareData, setSkincareData] = useState<SkincareData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const [streamStatus, setStreamStatus] = useState<string>('');
+  const [streamProgress, setStreamProgress] = useState<number>(0);
+  const pollingRef = useRef<NodeJS.Timeout | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
 
   const [activeRoutine, setActiveRoutine] = useState<'morning' | 'evening'>('morning');
 
@@ -57,6 +68,101 @@ function SkincareResults({
     }
   }, [resolvedSearchParams]);
 
+  // Poll for channel messages
+  const pollChannel = useCallback(async (sessionId: string) => {
+    try {
+      const response = await fetch(`/api/getmyroutine/channel/${sessionId}`);
+      const result = await response.json();
+      
+      if (!result.success || !result.messages) return;
+
+      for (const msg of result.messages as StreamMessage[]) {
+        if (msg.event === 'ai.status') {
+          setStreamStatus(msg.data.message || msg.data.type);
+          if (msg.data.type === 'generating') {
+            setStreamProgress(30);
+          } else if (msg.data.type === 'products_loaded') {
+            setStreamProgress(20);
+          }
+        } else if (msg.event === 'ai.chunk') {
+          // Update progress based on chunks received
+          const progress = Math.min(90, 30 + (msg.data.chunksReceived || 0) * 2);
+          setStreamProgress(progress);
+        } else if (msg.event === 'ai.complete') {
+          setStreamProgress(100);
+          setSkincareData(msg.data.routine);
+          setLoadingState(LoadingState.COMPLETED);
+          // Stop polling
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+          return;
+        } else if (msg.event === 'ai.error') {
+          setError(msg.data.error || 'An error occurred');
+          setLoadingState(LoadingState.ERROR);
+          if (pollingRef.current) {
+            clearInterval(pollingRef.current);
+            pollingRef.current = null;
+          }
+          return;
+        }
+      }
+    } catch (err) {
+      console.error('Polling error:', err);
+    }
+  }, []);
+
+  // Start realtime generation
+  const startRealtimeGeneration = useCallback(async () => {
+    if (!userPreferences) return;
+
+    const sessionId = `routine_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    sessionIdRef.current = sessionId;
+    
+    setLoadingState(LoadingState.STREAMING);
+    setStreamStatus('Starting routine generation...');
+    setStreamProgress(5);
+
+    try {
+      const response = await fetch('/api/getmyroutine/realtime', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId,
+          skinType: userPreferences.skinType,
+          skinConcern: userPreferences.skinConcern,
+          commitmentLevel: 'Standard',
+          preferredProducts: 'Natural/Organic Products',
+          limit: 150
+        })
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to start generation');
+      }
+
+      // Start polling for updates
+      pollingRef.current = setInterval(() => pollChannel(sessionId), 1000);
+
+      // Timeout after 2 minutes
+      setTimeout(() => {
+        if (pollingRef.current && loadingState === LoadingState.STREAMING) {
+          clearInterval(pollingRef.current);
+          pollingRef.current = null;
+          setError('Generation timed out. Please try again.');
+          setLoadingState(LoadingState.ERROR);
+        }
+      }, 120000);
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to start generation');
+      setLoadingState(LoadingState.ERROR);
+    }
+  }, [userPreferences, pollChannel, loadingState]);
+
   const fetchRoutine = useCallback(async () => {
     if (!userPreferences) {
       setError('Missing required preferences. Please retake the quiz.');
@@ -81,6 +187,12 @@ function SkincareResults({
       });
 
       if (!response.ok) {
+        // If no cached routine, start realtime generation
+        if (response.status === 404) {
+          console.log('No cached routine found, starting realtime generation...');
+          await startRealtimeGeneration();
+          return;
+        }
         throw new Error(`HTTP ${response.status}: ${response.statusText || 'Failed to fetch'}`);
       }
 
@@ -91,14 +203,25 @@ function SkincareResults({
         setSkincareData(result.data);
         setLoadingState(LoadingState.COMPLETED);
       } else {
-        throw new Error(result.message || 'No routine data found');
+        // No cached routine, start realtime generation
+        console.log('No routine data, starting realtime generation...');
+        await startRealtimeGeneration();
       }
     } catch (error: any) {
       console.error('Fetch error:', error.message);
       setError(error.message || 'Failed to load routine');
       setLoadingState(LoadingState.ERROR);
     }
-  }, [userPreferences]);
+  }, [userPreferences, startRealtimeGeneration]);
+
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingRef.current) {
+        clearInterval(pollingRef.current);
+      }
+    };
+  }, []);
 
   // Navigation
   const handleNavigateHome = useCallback(() => {
@@ -249,6 +372,53 @@ function SkincareResults({
             <p className="text-white/80 mb-6">
               Fetching your personalized skincare routine...
             </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Streaming state - Real-time AI generation
+  if (loadingState === LoadingState.STREAMING) {
+    return (
+      <div className="bg-gradient-to-br from-[#7772E7] via-[#9A68EB] to-[#D881F5F5] min-h-screen p-4 sm:p-6">
+        <div className="flex items-center justify-center p-4 mb-16">
+          <Navbar />
+        </div>
+        
+        <div className="max-w-4xl mx-auto flex items-center justify-center min-h-[400px]">
+          <div className="bg-white/25 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/30 text-center w-full max-w-md">
+            <div className="flex items-center justify-center mb-6">
+              <div className="relative">
+                <Sparkles className="w-16 h-16 text-white animate-pulse" />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full animate-ping" />
+              </div>
+            </div>
+            
+            <h2 className="text-2xl font-bold text-white mb-4">
+              🧪 AI Creating Your Routine
+            </h2>
+            
+            <p className="text-white/90 mb-6 text-lg">
+              {streamStatus || 'Analyzing your skin profile...'}
+            </p>
+            
+            {/* Progress bar */}
+            <div className="w-full bg-white/20 rounded-full h-3 mb-4 overflow-hidden">
+              <div 
+                className="h-full bg-gradient-to-r from-green-400 to-emerald-500 rounded-full transition-all duration-500 ease-out"
+                style={{ width: `${streamProgress}%` }}
+              />
+            </div>
+            
+            <p className="text-white/70 text-sm">
+              {streamProgress}% complete
+            </p>
+            
+            <div className="mt-6 flex items-center justify-center gap-2 text-white/60 text-sm">
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span>Processing with OpenAI...</span>
+            </div>
           </div>
         </div>
       </div>

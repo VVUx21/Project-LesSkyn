@@ -21,7 +21,7 @@ export default async function RootLayout({
       </div>
       
       <Image
-        src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755127425/skin-care-product-illustration-download-in-svg-png-gif-file-formats--natural-herbal-cosmetic-pack-beauty-illustrations-7974580_1_wbhirp.png"
+        src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351588/skin-care-product-illustration-download-in-svg-png-gif-file-formats--natural-herbal-cosmetic-pack-beauty-illustrations-7974580_1_py2idj.png"
         alt="Onboarding Background"
         className="absolute bottom-0 left-0 z-0 opacity-80"
         width={400}

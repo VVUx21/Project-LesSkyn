@@ -50,14 +50,14 @@ const Authform = ({type}:{type:string}) => {
         }
       }
       if (type === 'sign-in') {
-        console.log(values);
+        //console.log(values);
         const users= await signin(
           {
             email_id: values.email,
             password: values.password
           }
         );
-        console.log(users);
+        //console.log(users);
         if (users) router.push('/')
       } 
     } catch (error) {
@@ -71,7 +71,7 @@ const Authform = ({type}:{type:string}) => {
   <header className='flex flex-col gap-5 md:gap-8 mb-8'>
     <Link href="/" className='flex items-center gap-2'>
       <Image 
-        src="https://res.cloudinary.com/dgtdkqfsx/image/upload/v1755003537/Group_6_n0fihn.png" 
+        src="https://res.cloudinary.com/dzieihe1s/image/upload/v1765351041/Group_27_tzjtss.png" 
         alt='logo' 
         width={34} 
         height={34}
