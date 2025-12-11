@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import { getCachedProducts } from '@/lib/server/products.actions';
-import { generateSkincareRoutineStream } from '@/lib/server/openai.action';
+import { generateSkincareRoutineStream } from '@/lib/server/gemini.action';
 import { saveRoutineToDatabase, validateRequest } from '@/lib/utils';
 import { client as redis } from "@/lib/server/redis";
 import { realtime, createStreamSession, updateStreamSession } from "@/lib/server/upstash";
@@ -173,7 +173,106 @@ getMyRoutine.post('/getmyroutine/realtime', routineratelimit, async (c) => {
   }
 });
 
-// Endpoint to poll for channel messages (for clients that can't use SSE)
+// ===== SSE STREAMING ENDPOINT =====
+// Server-Sent Events endpoint for real-time updates (replaces polling)
+getMyRoutine.get('/getmyroutine/stream/:sessionId', async (c) => {
+  const sessionId = c.req.param('sessionId');
+  
+  if (!sessionId) {
+    return c.json({ success: false, error: 'sessionId is required' }, 400);
+  }
+
+  try {
+    // Set SSE headers
+    c.header('Content-Type', 'text/event-stream');
+    c.header('Cache-Control', 'no-cache');
+    c.header('Connection', 'keep-alive');
+    c.header('X-Accel-Buffering', 'no'); // Disable nginx buffering
+
+    // Create a stream that pushes Redis channel events to the client
+    const stream = new ReadableStream({
+      async start(controller) {
+        const encoder = new TextEncoder();
+        const channel = realtime.channel(sessionId);
+        let isClosed = false;
+        
+        // Helper to safely close the stream
+        const safeClose = () => {
+          if (!isClosed) {
+            isClosed = true;
+            clearInterval(pollInterval);
+            clearTimeout(timeoutHandle);
+            try {
+              controller.close();
+            } catch (error) {
+              console.error('Error closing controller:', error);
+            }
+          }
+        };
+        
+        // Send initial connection message
+        const initialMsg = `event: connected\ndata: ${JSON.stringify({ sessionId, timestamp: Date.now() })}\n\n`;
+        controller.enqueue(encoder.encode(initialMsg));
+
+        // Poll Redis channel for messages (Upstash doesn't support true pub/sub subscriptions)
+        const pollInterval = setInterval(async () => {
+          if (isClosed) return;
+          
+          try {
+            const messages = await channel.getMessages(50);
+            
+            // Send each new message as an SSE event
+            for (const msg of messages.reverse()) {
+              if (isClosed) return;
+              
+              const eventData = `event: ${msg.event}\ndata: ${JSON.stringify(msg.data)}\n\n`;
+              controller.enqueue(encoder.encode(eventData));
+              
+              // Close stream on completion or error
+              if (msg.event === 'ai.complete' || msg.event === 'ai.error') {
+                safeClose();
+                return;
+              }
+            }
+          } catch (error) {
+            console.error('SSE polling error:', error);
+          }
+        }, 1000); // Poll every 1 second (still better than client polling)
+
+        // Cleanup on client disconnect
+        const abortHandler = () => {
+          safeClose();
+        };
+        
+        c.req.raw.signal.addEventListener('abort', abortHandler);
+        
+        // Timeout after 3 minutes
+        const timeoutHandle = setTimeout(() => {
+          if (!isClosed) {
+            const timeoutMsg = `event: timeout\ndata: ${JSON.stringify({ message: 'Connection timed out' })}\n\n`;
+            controller.enqueue(encoder.encode(timeoutMsg));
+            safeClose();
+          }
+        }, 180000);
+      }
+    });
+
+    return new Response(stream, {
+      headers: {
+        'Content-Type': 'text/event-stream',
+        'Cache-Control': 'no-cache',
+        'Connection': 'keep-alive',
+        'X-Accel-Buffering': 'no'
+      }
+    });
+
+  } catch (error: any) {
+    console.error('❌ SSE streaming error:', error);
+    return c.json({ success: false, error: error.message }, 500);
+  }
+});
+
+// Endpoint to poll for channel messages (fallback for clients that can't use SSE)
 getMyRoutine.get('/getmyroutine/channel/:sessionId', async (c) => {
   const sessionId = c.req.param('sessionId');
   

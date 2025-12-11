@@ -2,23 +2,23 @@
 import { useSkinCare } from "@/context/skin-care-context"
 import { Button } from "@/components/ui/button"
 import { Check, Loader2, AlertCircle, RefreshCw } from "lucide-react"
-import { SkincareRoutineResponse } from "@/lib/types"
 import { MultiStepLoader } from '@/components/ui/multi-step-loader';
 import Image from "next/image"
-import { useCallback, useState } from "react"
+import { useCallback, useState, useRef } from "react"
 import { useRouter } from "next/navigation"
+import {
+  mapSkinTypeToAPI,
+  mapSkinConcernToAPI,
+  getSkinTypeLabel,
+  getSkinConcernLabel,
+  getRoutineTypeLabel,
+  buildRoutineRequestPayload,
+  LOADING_STATES
+} from "@/lib/skincare-mappers"
 
 interface SummaryStepProps {
   onComplete: () => void
 }
-
-const loadingStates = [
-  { text: "Searching for your personalized routine..." },
-  { text: "AI is crafting your perfect skincare plan..." },
-  { text: "Analyzing product combinations..." },
-  { text: "Fine-tuning morning and evening routines..." },
-  { text: "Almost ready - finalizing recommendations..." },
-];
 
 export default function SummaryStep({ onComplete }: SummaryStepProps) {
   const router = useRouter();
@@ -26,148 +26,139 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-  const [processingTime, setProcessingTime] = useState<number | null>(null);
+  const [streamStatus, setStreamStatus] = useState<string>('');
+  const [streamProgress, setStreamProgress] = useState<number>(0);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
-  // Map user-friendly skin type to API format
-  const mapSkinTypeToAPI = (skinType: string): string => {
-    const mapping: Record<string, string> = {
-      "Oily T-zone (forehead, nose, chin) but dry cheeks": "Combination",
-      "Shiny appearance, enlarged pores, prone to breakouts": "Oily",
-      "Well-balanced, not too oily or dry, few imperfections": "Normal",
-      "Feels tight, may have flaky patches, rarely gets oily": "Dry",
-      "Easily irritated, may react to products with redness": "Sensitive"
-    };
-    return mapping[skinType] || "Normal";
-  };
-
-  // Map user-friendly skin concern to API format
-  const mapSkinConcernToAPI = (skinConcern: string): string => {
-    const mapping: Record<string, string> = {
-      "Pimples, blackheads, whiteheads, and clogged pores": "Clear Acne & Breakouts",
-      "Fine lines, wrinkles, loss of firmness and elasticity": "Anti-aging",
-      "Lack of radiance, rough texture, uneven skin tone": "Achieve a Natural Glow",
-      "Sun spots, post-acne marks, melasma, uneven skin tone": "Even Out Skin Tone & Reduce Dark Spots",
-      "Irritation, redness, reactivity to products": "Reduce Redness & Sensitivity"
-    };
-    return mapping[skinConcern] || "Not specified";
-  };
-
-  // Map routine type to API format
-  const mapRoutineTypeToAPI = (routineType: string): string => {
-    const mapping: Record<string, string> = {
-      "A simple, no-fuss routine with just the essentials 3-4 steps": "Minimal",
-      "A balanced routine with targeted treatments 5-6 steps": "Standard",
-      "A complete routine for maximum results 7+ steps": "Comprehensive"
-    };
-    return mapping[routineType] || "Standard";
-  };
-
-  // Determine preferred products based on routine type
-  const determinePreferredProducts = (routineType: string): string => {
-    if (routineType === "A complete routine for maximum results 7+ steps") {
-      return "Budget-Friendly + Natural/Organic Products";
-    }
-    return "Natural/Organic Products";
-  };
-
-  // Get relevant product categories based on skin concern
-  const getRelevantCategories = (skinConcern: string): string[] => {
-    const baseCategories = ["cleansers", "moisturizers", "serum", "facewash"];
-    const concernCategories: Record<string, string[]> = {
-      "Pimples, blackheads, whiteheads, and clogged pores": ["acne treatments", "serums", "toners"],
-      "Fine lines, wrinkles, loss of firmness and elasticity": ["anti-aging", "serums", "retinoids", "peptides"],
-      "Lack of radiance, rough texture, uneven skin tone": ["exfoliants", "serums", "vitamin c", "brightening"],
-      "Sun spots, post-acne marks, melasma, uneven skin tone": ["brightening", "vitamin c", "niacinamide", "serums"],
-      "Irritation, redness, reactivity to products": ["sensitive skin", "gentle", "hydrating serums"]
-    };
-    return [...baseCategories, ...(concernCategories[skinConcern] || [])];
-  };
-
-  // Generate routine using realtime API with polling
-  const generateRoutine = useCallback(async (): Promise<SkincareRoutineResponse> => {
-    const sessionId = `routine_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
-    
-    const requestPayload = {
-      sessionId,
-      skinType: mapSkinTypeToAPI(userProfile.skinType),
-      skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
-      commitmentLevel: mapRoutineTypeToAPI(userProfile.routineType),
-      preferredProducts: determinePreferredProducts(userProfile.routineType),
-      limit: 20, // Reduced from 150 to stay within gpt-4o-mini token limits
-      categories: getRelevantCategories(userProfile.skinConcern),
-      priceRange: {
-        min: 5,
-        max: userProfile.routineType === "A complete routine for maximum results 7+ steps" ? 150 : 80
-      }
-    };
-
-    console.log('🚀 Starting routine generation:', requestPayload);
-
-    // Start the realtime generation
-    const startResponse = await fetch('/api/getmyroutine/realtime', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestPayload)
-    });
-
-    const startResult = await startResponse.json();
-    if (!startResult.success) {
-      throw new Error(startResult.error || 'Failed to start generation');
-    }
-
-    // Poll for completion
-    const startTime = Date.now();
-    const timeout = 120000; // 2 minutes
-
-    while (Date.now() - startTime < timeout) {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      const channelResponse = await fetch(`/api/getmyroutine/channel/${sessionId}`);
-      const channelResult = await channelResponse.json();
-
-      if (!channelResult.success) continue;
-
-      for (const msg of channelResult.messages || []) {
-        if (msg.event === 'ai.complete') {
-          setProcessingTime(Date.now() - startTime);
-          return {
-            success: true,
-            data: msg.data.routine,
-            metadata: {
-              processingTime: msg.data.processingTime,
-              totalProducts: 0,
-              analyzedProducts: 0,
-              cached: msg.data.cached
-            }
-          };
-        } else if (msg.event === 'ai.error') {
-          throw new Error(msg.data.error || 'Generation failed');
+  // Handle SSE events from server
+  const handleSSEMessage = useCallback((event: MessageEvent, eventType: string) => {
+    try {
+      const data = JSON.parse(event.data);
+      
+      if (eventType === 'connected') {
+        console.log('✅ SSE connected:', data.sessionId);
+        setStreamStatus('Connected to server...');
+        setStreamProgress(5);
+      } else if (eventType === 'ai.status') {
+        setStreamStatus(data.message || data.type);
+        if (data.type === 'generating') {
+          setStreamProgress(30);
+        } else if (data.type === 'products_loaded') {
+          setStreamProgress(20);
+        } else if (data.type === 'started') {
+          setStreamProgress(10);
+        }
+      } else if (eventType === 'ai.chunk') {
+        const progress = Math.min(90, 30 + (data.chunksReceived || 0) * 2);
+        setStreamProgress(progress);
+      } else if (eventType === 'ai.complete') {
+        setStreamProgress(100);
+        setStreamStatus('Complete! Redirecting...');
+        
+        // Close SSE connection
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+        }
+        
+        // Navigate to results page
+        const queryParams = new URLSearchParams({
+          skinType: mapSkinTypeToAPI(userProfile.skinType),
+          skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
+        });
+        
+        setTimeout(() => {
+          setIsGenerating(false);
+          router.push(`/skincare_routine?${queryParams.toString()}`);
+        }, 500);
+      } else if (eventType === 'ai.error') {
+        setError(data.error || 'An error occurred');
+        setIsGenerating(false);
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
+        }
+      } else if (eventType === 'timeout') {
+        setError('Generation timed out. Please try again.');
+        setIsGenerating(false);
+        if (eventSourceRef.current) {
+          eventSourceRef.current.close();
+          eventSourceRef.current = null;
         }
       }
+    } catch (err) {
+      console.error('Error parsing SSE message:', err);
     }
+  }, [userProfile, router]);
 
-    throw new Error('Generation timed out');
-  }, [userProfile]);
+  // Generate routine using SSE
+  const generateRoutine = useCallback(async () => {
+    const sessionId = `routine_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    
+    const requestPayload = buildRoutineRequestPayload(
+      sessionId,
+      userProfile.skinType,
+      userProfile.skinConcern,
+      userProfile.routineType,
+      150 // limit
+    );
+
+    console.log('🚀 Starting routine generation with SSE:', requestPayload);
+
+    try {
+      // Start the generation on the backend
+      const response = await fetch('/api/getmyroutine/realtime', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestPayload)
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to start generation');
+      }
+
+      console.log('✅ Generation started, opening SSE connection...');
+
+      // Open SSE connection to receive real-time updates
+      const eventSource = new EventSource(`/api/getmyroutine/stream/${sessionId}`);
+      eventSourceRef.current = eventSource;
+
+      console.log('📡 SSE connection opened for session:', sessionId);
+
+      // Listen for different event types
+      eventSource.addEventListener('connected', (e) => handleSSEMessage(e, 'connected'));
+      eventSource.addEventListener('ai.status', (e) => handleSSEMessage(e, 'ai.status'));
+      eventSource.addEventListener('ai.chunk', (e) => handleSSEMessage(e, 'ai.chunk'));
+      eventSource.addEventListener('ai.complete', (e) => handleSSEMessage(e, 'ai.complete'));
+      eventSource.addEventListener('ai.error', (e) => handleSSEMessage(e, 'ai.error'));
+      eventSource.addEventListener('timeout', (e) => handleSSEMessage(e, 'timeout'));
+
+      // Handle connection errors
+      eventSource.onerror = (err) => {
+        console.error('❌ SSE connection error:', err);
+        setError('Connection lost. Please try again.');
+        setIsGenerating(false);
+        eventSource.close();
+        eventSourceRef.current = null;
+      };
+
+    } catch (err: any) {
+      setError(err.message || 'Failed to start generation');
+      setIsGenerating(false);
+    }
+  }, [userProfile, handleSSEMessage]);
 
   // Handle generate button click
   const handleGenerateRoutine = useCallback(async () => {
     setIsGenerating(true);
     setError(null);
-    setProcessingTime(null);
-
-    const queryParams = new URLSearchParams({
-      skinType: mapSkinTypeToAPI(userProfile.skinType),
-      skinConcern: mapSkinConcernToAPI(userProfile.skinConcern),
-    });
+    setStreamStatus('Initializing...');
+    setStreamProgress(0);
 
     try {
-      const routine = await generateRoutine();
-      if (routine?.success) {
-        setIsGenerating(false);
-        router.push(`/skincare_routine?${queryParams.toString()}`);
-      } else {
-        throw new Error("Routine generation failed");
-      }
+      await generateRoutine();
     } catch (err: unknown) {
       const errorMessage = err instanceof Error ? err.message : "Failed to generate skincare routine";
       setError(errorMessage);
@@ -175,45 +166,18 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
       console.error("❌ Generation error:", err);
       setIsGenerating(false);
     }
-  }, [userProfile, router, generateRoutine]);
+  }, [generateRoutine]);
 
-  // Get display labels
-  const getSkinTypeLabel = (): string => {
-    const labels: Record<string, string> = {
-      "Oily T-zone (forehead, nose, chin) but dry cheeks": "Combination",
-      "Shiny appearance, enlarged pores, prone to breakouts": "Oily",
-      "Well-balanced, not too oily or dry, few imperfections": "Normal",
-      "Feels tight, may have flaky patches, rarely gets oily": "Dry",
-      "Easily irritated, may react to products with redness": "Sensitive"
-    };
-    return labels[userProfile.skinType] || "Not specified";
-  };
-
-  const getSkinConcernLabel = (): string => {
-    const labels: Record<string, string> = {
-      "Pimples, blackheads, whiteheads, and clogged pores": "Clear Acne & Breakouts",
-      "Fine lines, wrinkles, loss of firmness and elasticity": "Anti-aging",
-      "Lack of radiance, rough texture, uneven skin tone": "Achieve a Natural Glow",
-      "Sun spots, post-acne marks, melasma, uneven skin tone": "Even Out Skin Tone & Reduce Dark Spots",
-      "Irritation, redness, reactivity to products": "Reduce Redness & Sensitivity"
-    };
-    return labels[userProfile.skinConcern] || "Not specified";
-  };
-
-  const getRoutineTypeLabel = (): string => {
-    const labels: Record<string, string> = {
-      "A simple, no-fuss routine with just the essentials 3-4 steps": "Minimal",
-      "A balanced routine with targeted treatments 5-6 steps": "Standard",
-      "A complete routine for maximum results 7+ steps": "Comprehensive"
-    };
-    return labels[userProfile.routineType] || "Not specified";
-  };
+  // Get display labels using shared mappers
+  const skinTypeLabel = getSkinTypeLabel(userProfile.skinType);
+  const skinConcernLabel = getSkinConcernLabel(userProfile.skinConcern);
+  const routineTypeLabel = getRoutineTypeLabel(userProfile.routineType);
 
   return (
     <div className="space-y-6">
       {isGenerating && (
         <MultiStepLoader
-          loadingStates={loadingStates}
+          loadingStates={LOADING_STATES}
           loading={true}
           duration={2000}
           loop={false}
@@ -226,15 +190,15 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
         <div className="space-y-4">
           <div className="flex items-center justify-between border-b pb-2">
             <span className="text-muted-foreground">Skin Type</span>
-            <span className="font-medium">{getSkinTypeLabel()}</span>
+            <span className="font-medium">{skinTypeLabel}</span>
           </div>
           <div className="flex items-center justify-between border-b pb-2">
             <span className="text-muted-foreground">Main Concern</span>
-            <span className="font-medium">{getSkinConcernLabel()}</span>
+            <span className="font-medium">{skinConcernLabel}</span>
           </div>
           <div className="flex items-center justify-between border-b pb-2">
             <span className="text-muted-foreground">Routine Preference</span>
-            <span className="font-medium">{getRoutineTypeLabel()}</span>
+            <span className="font-medium">{routineTypeLabel}</span>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-muted-foreground">Face Scan</span>
@@ -271,21 +235,26 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
         </div>
       )}
 
-      {/* Loading State */}
+      {/* Loading State with Progress */}
       {isGenerating && (
         <div className="rounded-lg bg-blue-50 p-4 text-blue-800">
           <div className="flex items-start gap-3">
             <Loader2 className="mt-0.5 h-5 w-5 animate-spin text-blue-600" />
-            <div>
+            <div className="flex-1">
               <p className="font-medium">Generating your routine...</p>
-              <p className="text-sm">
-                Our AI is analyzing products to find the perfect match for your skin.
+              <p className="text-sm mb-2">
+                {streamStatus || 'Our AI is analyzing products to find the perfect match for your skin.'}
               </p>
-              {processingTime && (
-                <p className="text-xs mt-1 text-blue-600">
-                  Processing time: {(processingTime / 1000).toFixed(1)}s
-                </p>
-              )}
+              {/* Progress bar */}
+              <div className="w-full bg-blue-200 rounded-full h-2 overflow-hidden">
+                <div 
+                  className="h-full bg-blue-600 rounded-full transition-all duration-500 ease-out"
+                  style={{ width: `${streamProgress}%` }}
+                />
+              </div>
+              <p className="text-xs mt-1 text-blue-600">
+                {streamProgress}% complete
+              </p>
             </div>
           </div>
         </div>
