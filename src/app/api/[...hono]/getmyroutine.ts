@@ -6,6 +6,7 @@ import { client as redis } from "@/lib/server/redis";
 import { realtime, createStreamSession, updateStreamSession } from "@/lib/server/upstash";
 import { GenerateRoutineRequest } from "@/lib/types";
 import { rateLimiter } from './ratelimiter';
+import { requireAuth } from './auth';
 
 const getMyRoutine = new Hono();
 
@@ -20,14 +21,29 @@ const normalizeCached = <T>(val: any): T | null => {
 const cacheKeyFor = (skinType: string, skinConcern: string) =>
   `routine:${skinType.trim()}:${skinConcern.trim()}`;
 
-const routineratelimit = rateLimiter({
+const routineGenerateRateLimit = rateLimiter({
   windowInSeconds: 300,
-  maxRequests: 5
+  maxRequests: 5,
+  keyPrefix: 'rate-limit:routine-generate',
+  getIdentifier: (c) => {
+    const auth = c.get('auth') as { userId?: string } | undefined;
+    return auth?.userId || '';
+  }
+});
+
+const routineReadRateLimit = rateLimiter({
+  windowInSeconds: 60,
+  maxRequests: 120,
+  keyPrefix: 'rate-limit:routine-stream',
+  getIdentifier: (c) => {
+    const auth = c.get('auth') as { userId?: string } | undefined;
+    return auth?.userId || '';
+  }
 });
 
 // ===== REALTIME STREAMING ENDPOINT =====
 // Uses Upstash Redis channels for real-time updates (like the workflow pattern)
-getMyRoutine.post('/getmyroutine/realtime', routineratelimit, async (c) => {
+getMyRoutine.post('/getmyroutine/realtime', requireAuth, routineGenerateRateLimit, async (c) => {
   const startTime = Date.now();
 
   try {
@@ -175,7 +191,7 @@ getMyRoutine.post('/getmyroutine/realtime', routineratelimit, async (c) => {
 
 // ===== SSE STREAMING ENDPOINT =====
 // Server-Sent Events endpoint for real-time updates (replaces polling)
-getMyRoutine.get('/getmyroutine/stream/:sessionId', async (c) => {
+getMyRoutine.get('/getmyroutine/stream/:sessionId', requireAuth, routineReadRateLimit, async (c) => {
   const sessionId = c.req.param('sessionId');
   
   if (!sessionId) {
@@ -195,6 +211,9 @@ getMyRoutine.get('/getmyroutine/stream/:sessionId', async (c) => {
         const encoder = new TextEncoder();
         const channel = realtime.channel(sessionId);
         let isClosed = false;
+        // Cursor here is the next list index to read from.
+        // We support resumability via SSE Last-Event-ID (auto-reconnect) and `?cursor=` (full refresh).
+        let cursor = 0;
         
         // Helper to safely close the stream
         const safeClose = () => {
@@ -211,7 +230,23 @@ getMyRoutine.get('/getmyroutine/stream/:sessionId', async (c) => {
         };
         
         // Send initial connection message
-        const initialMsg = `event: connected\ndata: ${JSON.stringify({ sessionId, timestamp: Date.now() })}\n\n`;
+        const cursorParam = c.req.query('cursor');
+        const lastEventIdHeader = c.req.raw.headers.get('last-event-id');
+
+        const parsedCursorParam = cursorParam ? Number.parseInt(cursorParam, 10) : NaN;
+        const parsedLastEventId = lastEventIdHeader ? Number.parseInt(lastEventIdHeader, 10) : NaN;
+
+        if (Number.isFinite(parsedLastEventId) && parsedLastEventId >= 0) {
+          cursor = parsedLastEventId + 1;
+        } else if (Number.isFinite(parsedCursorParam) && parsedCursorParam >= 0) {
+          cursor = parsedCursorParam;
+        } else {
+          cursor = 0;
+        }
+
+        // Send initial connection message.
+        // Note: `id:` is what lets browsers resume automatically on transient disconnects.
+        const initialMsg = `id: ${Math.max(-1, cursor - 1)}\nevent: connected\ndata: ${JSON.stringify({ sessionId, cursor, timestamp: Date.now() })}\n\n`;
         controller.enqueue(encoder.encode(initialMsg));
 
         // Poll Redis channel for messages (Upstash doesn't support true pub/sub subscriptions)
@@ -219,13 +254,18 @@ getMyRoutine.get('/getmyroutine/stream/:sessionId', async (c) => {
           if (isClosed) return;
           
           try {
-            const messages = await channel.getMessages(50);
-            
-            // Send each new message as an SSE event
-            for (const msg of messages.reverse()) {
+            const batch = await channel.readBatch(cursor, 50);
+            const messages = batch.messages;
+            const nextCursor = batch.nextCursor;
+
+            // Send each new message as an SSE event (already chronological)
+            for (let i = 0; i < messages.length; i++) {
               if (isClosed) return;
+
+              const msg = messages[i];
+              const eventId = cursor + i;
               
-              const eventData = `event: ${msg.event}\ndata: ${JSON.stringify(msg.data)}\n\n`;
+              const eventData = `id: ${eventId}\nevent: ${msg.event}\ndata: ${JSON.stringify(msg.data)}\n\n`;
               controller.enqueue(encoder.encode(eventData));
               
               // Close stream on completion or error
@@ -234,6 +274,9 @@ getMyRoutine.get('/getmyroutine/stream/:sessionId', async (c) => {
                 return;
               }
             }
+
+            // Advance cursor only after sending.
+            cursor = nextCursor;
           } catch (error) {
             console.error('SSE polling error:', error);
           }
@@ -273,7 +316,7 @@ getMyRoutine.get('/getmyroutine/stream/:sessionId', async (c) => {
 });
 
 // Endpoint to poll for channel messages (fallback for clients that can't use SSE)
-getMyRoutine.get('/getmyroutine/channel/:sessionId', async (c) => {
+getMyRoutine.get('/getmyroutine/channel/:sessionId', requireAuth, routineReadRateLimit, async (c) => {
   const sessionId = c.req.param('sessionId');
   
   if (!sessionId) {
@@ -282,11 +325,14 @@ getMyRoutine.get('/getmyroutine/channel/:sessionId', async (c) => {
 
   try {
     const channel = realtime.channel(sessionId);
-    const messages = await channel.getMessages(50);
+    const cursorParam = c.req.query('cursor');
+    const cursor = cursorParam ? Number.parseInt(cursorParam, 10) : 0;
+    const { messages, nextCursor } = await channel.readBatch(Number.isFinite(cursor) ? cursor : 0, 50);
     
     return c.json({ 
       success: true, 
-      messages: messages.reverse() // Return in chronological order
+      messages,
+      nextCursor
     });
   } catch (error: any) {
     return c.json({ success: false, error: error.message }, 500);

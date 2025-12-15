@@ -5,21 +5,45 @@ export const realtime = {
   channel: (channelId: string) => ({
     async emit(event: string, data: any) {
       const message = JSON.stringify({ event, data, timestamp: Date.now() });
-      await redis.lpush(`channel:${channelId}`, message);
+      const channelKey = `channel:${channelId}`;
+      // Append in chronological order
+      await redis.rpush(channelKey, message);
       // Set TTL to auto-cleanup after 5 minutes
-      await redis.expire(`channel:${channelId}`, 300);
+      await redis.expire(channelKey, 300);
     },
-    async getMessages(count: number = 100) {
-      const messages = await redis.lrange(`channel:${channelId}`, 0, count - 1);
-      return messages.map((msg: any) => {
+    async readBatch(cursor: number, count: number = 50): Promise<{ messages: any[]; nextCursor: number }> {
+      const channelKey = `channel:${channelId}`;
+      const start = Math.max(0, cursor);
+      const end = start + Math.max(0, count) - 1;
+      const raw = await redis.lrange(channelKey, start, end);
+      const messages = raw.map((msg: any) => {
         if (typeof msg === 'string') {
           try { return JSON.parse(msg); } catch { return msg; }
         }
         return msg;
       });
+      return { messages, nextCursor: start + messages.length };
+    },
+    async getCursor(): Promise<number> {
+      const cursorKey = `channel:${channelId}:cursor`;
+      const val = await redis.get(cursorKey);
+      const parsed = typeof val === 'string' ? Number.parseInt(val, 10) : 0;
+      return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
+    },
+    async setCursor(cursor: number) {
+      const cursorKey = `channel:${channelId}:cursor`;
+      const safe = Number.isFinite(cursor) && cursor >= 0 ? Math.floor(cursor) : 0;
+      // Keep cursor around as long as the channel key is around
+      await redis.set(cursorKey, String(safe), 'EX', 300);
+    },
+    // Backward-compatible: return latest messages from beginning
+    async getMessages(count: number = 100) {
+      const { messages } = await this.readBatch(0, count);
+      return messages;
     },
     async clear() {
       await redis.del(`channel:${channelId}`);
+      await redis.del(`channel:${channelId}:cursor`);
     }
   })
 };

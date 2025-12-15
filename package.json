@@ -26,7 +26,7 @@
     "ioredis": "^5.7.0",
     "lucide-react": "^0.539.0",
     "motion": "^12.23.12",
-    "next": "15.4.6",
+    "next": "15.4.10",
     "node-appwrite": "^17.0.0",
     "openai": "^6.10.0",
     "react": "19.1.0",

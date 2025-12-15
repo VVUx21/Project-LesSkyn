@@ -29,11 +29,21 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
   const [streamStatus, setStreamStatus] = useState<string>('');
   const [streamProgress, setStreamProgress] = useState<number>(0);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const sessionIdRef = useRef<string | null>(null);
 
   // Handle SSE events from server
   const handleSSEMessage = useCallback((event: MessageEvent, eventType: string) => {
     try {
       const data = JSON.parse(event.data);
+
+      // Store last received event id so a full page refresh can resume.
+      if (sessionIdRef.current && typeof event.lastEventId === 'string' && event.lastEventId.length > 0) {
+        try {
+          sessionStorage.setItem(`sse:lastEventId:${sessionIdRef.current}`, event.lastEventId);
+        } catch {
+          // ignore storage errors
+        }
+      }
       
       if (eventType === 'connected') {
         console.log('✅ SSE connected:', data.sessionId);
@@ -94,6 +104,7 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
   // Generate routine using SSE
   const generateRoutine = useCallback(async () => {
     const sessionId = `routine_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+    sessionIdRef.current = sessionId;
     
     const requestPayload = buildRoutineRequestPayload(
       sessionId,
@@ -113,6 +124,13 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
         body: JSON.stringify(requestPayload)
       });
 
+      if (response.status === 401) {
+        setError('Please sign in to generate your routine.');
+        setIsGenerating(false);
+        router.push('/Sign-in');
+        return;
+      }
+
       const result = await response.json();
 
       if (!result.success) {
@@ -122,7 +140,18 @@ export default function SummaryStep({ onComplete }: SummaryStepProps) {
       console.log('✅ Generation started, opening SSE connection...');
 
       // Open SSE connection to receive real-time updates
-      const eventSource = new EventSource(`/api/getmyroutine/stream/${sessionId}`);
+      let cursorQuery = '';
+      try {
+        const lastId = sessionStorage.getItem(`sse:lastEventId:${sessionId}`);
+        const parsed = lastId ? Number.parseInt(lastId, 10) : NaN;
+        if (Number.isFinite(parsed) && parsed >= 0) {
+          cursorQuery = `?cursor=${parsed + 1}`;
+        }
+      } catch {
+        // ignore
+      }
+
+      const eventSource = new EventSource(`/api/getmyroutine/stream/${sessionId}${cursorQuery}`);
       eventSourceRef.current = eventSource;
 
       console.log('📡 SSE connection opened for session:', sessionId);
